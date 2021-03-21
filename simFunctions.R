@@ -1,24 +1,40 @@
-##Libraries
-
-
-
 # Functions
 ##-------------------------------------------------------------------------------------------------------------------##
-simData <- function (parm)
+
+simData <- function (parm, infinity)
 {
-  #Construct covariance matrix
-  nPred <- parm$pred
-  sigma <- matrix(parm$cov, parm$pred, parm$pred)
-  diag(sigma) <- 1.0
+  if (infinity == "no")
+  {
+    nPred <- parm$pred
+    sigma <- matrix(parm$cov, parm$pred, parm$pred)
+    diag(sigma) <- 1.0
+    
+    #Generate data
+    X <- rmvnorm(n = parm$n, mean = rep(0, nPred), sigma = sigma)
+    
+    Y <- rnorm(n = parm$n, mean = 0, sd = 1)
+    
+    data <- data.frame(X,Y)
+    
+    data
+  }
   
-  #Generate data
-  X <- rmvnorm(n = parm$n, mean = rep(0, nPred), sigma = sigma)
-  
-  Y <- rnorm(n = parm$n, mean = 0, sd = 1)
-  
-  data <- data.frame(X,Y)
-  
-  data
+  else  #Approximate an infinite N to approximate a true FMI
+    
+  {
+    nPred <- parm$pred
+    sigma <- matrix(parm$cov, parm$pred, parm$pred)
+    diag(sigma) <- 1.0
+    
+    #Generate data
+    X <- rmvnorm(n = parm$Nfmi, mean = rep(0, nPred), sigma = sigma)
+    
+    Y <- rnorm(n = parm$Nfmi, mean = 0, sd = 1)
+    
+    data <- data.frame(X,Y)
+    
+    data
+  }
 }
 
 ##-------------------------------------------------------------------------------------------------------------------##
