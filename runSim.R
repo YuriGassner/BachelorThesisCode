@@ -41,20 +41,6 @@ fmiInfinite <- calcFMI(data = datainfinite, infinity = "yes")
 
 ###----------------------------------------###
 
-data1 <- data[,1:3] #Exclude Y
-
-#Set up Model
-
-data.cfa <- 'Y =~ X1 + X2 + X3' 
-step1.cfa <- cfa(data.cfa, data = data1, missing = "fiml", std.lv = TRUE) 
-
-se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
-cov.cfa <- step1.cfa@implied[["cov"]][[1]]
-means.cfa <- step1.cfa@implied[["mean"]][[1]]
-
-#Multiple model-implied cov by N/N-1, only worth doing with small N
-
-cov.cfa <- cov.cfa*(parm$n/(parm$n-1))
 
 ###--------------------------###
 #Run Simulation
