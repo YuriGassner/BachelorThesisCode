@@ -1,7 +1,7 @@
 rm(list=ls(all=TRUE))
 
 
-
+set.seed(400)
 nPred <- parm$pred
 sigma <- matrix(parm$cov, parm$pred, parm$pred)
 diag(sigma) <- 1.0
