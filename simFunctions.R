@@ -1,44 +1,26 @@
 ##Libraries
 library("SimDesign")
+library("lavaan")
+
 
 # Functions
 ##-------------------------------------------------------------------------------------------------------------------##
-simData <- function (parm$n, parm$coef, parm$cov, parm$rsq)
+simData <- function (parm)
 {
   #Construct covariance matrix
-  nPred <- length(parm$coef) - 1
-  sigma <- matrix(parm$cov, parm$n, parm$n)
+  nPred <- parm$pred
+  sigma <- matrix(parm$cov, parm$pred, parm$pred)
   diag(sigma) <- 1.0
   
   #Generate data
   X <- rmvnorm(n = parm$n, mean = rep(0, nPred), sigma = sigma)
   
-  #Generate error termn
-  #if r.sqrd = 0, we need to fix this stuff.
-  
-  
-  beta <- coefficients[-1]
-  if(parm$rsq > 0)
-  {
-    var.model <- t(beta) %*% cov(X) %*% beta
-    var.residual <- (var.model/parm$rsq) - var.model
-    U = rnorm(parm$n, mean = 0, sd = sqrt(var.residual))
-    #compute Y
-    Y <- coefficients[1] + X  %*% beta + U 
-  }
-  else
-  {
-    Y <- rnorm(n=500, mean=0, sd=1)
-  }
-  
-  
+  Y <- rnorm(n = parm$n, mean = 0, sd = 1)
   
   data <- data.frame(X)
   
-  #Add to data frame
   data$Y <- as.vector(Y)
   
-  #Return data
   data
 }
 
@@ -101,7 +83,9 @@ calcFMI <- function (data)
 
 
 impData <- function(data)
-
+{
+  
+}
 
     
 ###--------------------------------------------------------------------------###
