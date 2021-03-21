@@ -89,11 +89,91 @@ makeMissing <- function(data,
 
 ###----------------------------------------------------------###
 
-
-calcFMI <- function (data)
+calcFMI <- function (data, infinity)
 {
   
-
+  if (infinity == "yes")
+  {
+    data1 <- data[,1:3] #Exclude Y
+    
+    #Set up Model
+    
+    data.cfa <- 'Y =~ X1 + X2 + X3' 
+    step1.cfa <- cfa(data.cfa, data = data1, missing = "fiml", std.lv = TRUE) 
+    
+    se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
+    cov.cfa <- step1.cfa@implied[["cov"]][[1]]
+    means.cfa <- step1.cfa@implied[["mean"]][[1]]
+    
+    #Multiple model-implied cov by N/N-1, only worth doing with small N
+    
+    cov.cfa <- cov.cfa*(parm$Nfmi/(parm$Nfmi-1))
+    
+    #Sepcify row and columnnames according to model
+    
+    rownames(cov.cfa) <- c("X1","X2","X3")
+    colnames(cov.cfa) <- c("X1","X2","X3")
+    
+    #run the model with model-implied cov matrix and means as input
+    step2.cfa <- cfa(data.cfa,
+                     sample.cov = cov.cfa,
+                     sample.mean = means.cfa,
+                     sample.nobs = parm$Nfmi, 
+                     std.lv = TRUE,
+                     meanstructure = TRUE,
+                     information = "observed")
+    
+    se.step2.cfa <- parameterEstimates(step2.cfa)$se
+    
+    #Compute vector of fraction of missing information estimates
+    
+    fmi <- 1-(se.step2.cfa^2/se.cfa^2)
+    fmi
+  }
+  else if (infinity == "no")
+  {
+    data1 <- data[,1:3] #Exclude Y
+    
+    #Set up Model
+    
+    data.cfa <- 'Y =~ X1 + X2 + X3' 
+    step1.cfa <- cfa(data.cfa, data = data1, missing = "fiml", std.lv = TRUE) 
+    
+    se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
+    cov.cfa <- step1.cfa@implied[["cov"]][[1]]
+    means.cfa <- step1.cfa@implied[["mean"]][[1]]
+    
+    #Multiple model-implied cov by N/N-1, only worth doing with small N
+    
+    cov.cfa <- cov.cfa*(parm$n/(parm$n-1))
+    
+    #Sepcify row and columnnames according to model
+    
+    rownames(cov.cfa) <- c("X1","X2","X3")
+    colnames(cov.cfa) <- c("X1","X2","X3")
+    
+    #run the model with model-implied cov matrix and means as input
+    step2.cfa <- cfa(data.cfa,
+                     sample.cov = cov.cfa,
+                     sample.mean = means.cfa,
+                     sample.nobs = parm$n, 
+                     std.lv = TRUE,
+                     meanstructure = TRUE,
+                     information = "observed")
+    
+    se.step2.cfa <- parameterEstimates(step2.cfa)$se
+    
+    #Compute vector of fraction of missing information estimates
+    
+    fmi <- 1-(se.step2.cfa^2/se.cfa^2)
+    fmi
+  }
+  
+  else 
+  {
+    stop("Unknown or no Sample size specified")
+  }
+  
 }
 
 
