@@ -1,6 +1,5 @@
 ##Libraries
-library("SimDesign")
-library("lavaan")
+
 
 
 # Functions
@@ -17,9 +16,7 @@ simData <- function (parm)
   
   Y <- rnorm(n = parm$n, mean = 0, sd = 1)
   
-  data <- data.frame(X)
-  
-  data$Y <- as.vector(Y)
+  data <- data.frame(X,Y)
   
   data
 }
