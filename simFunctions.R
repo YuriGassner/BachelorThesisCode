@@ -19,7 +19,7 @@ simData <- function (parm, infinity)
     data
   }
   
-  else  #Approximate an infinite N to approximate a true FMI
+  else if (infinity == "yes")  #Approximate an infinite N to approximate a true FMI
     
   {
     nPred <- parm$pred
@@ -34,6 +34,11 @@ simData <- function (parm, infinity)
     data <- data.frame(X,Y)
     
     data
+  }
+  
+  else
+  {
+    stop("Undefined or unsupported Sample Size")
   }
 }
 
