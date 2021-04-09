@@ -103,12 +103,13 @@ for (a in 1:parm$iter)
   #Save list to Location
   store_i[[a]] <- store
   write.table(data.frame(store), 
-              file = paste0("/home/BachelorThesisCode/results/results_i",a,".md"))
+              file     = paste0("results/data_iteration_",a,".csv")) 
   
 }
 
 end_time <- Sys.time()
 
+# Current time per Iteration ~10min30sec
 
 # End Simulation
 ###-----------------------------------------------------------------###
