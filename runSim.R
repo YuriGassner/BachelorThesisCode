@@ -18,10 +18,15 @@ set.seed(541491)
 
 
 ## Storing the data as a list since the output of the analyses are multiple matrices
-## Conditions will be sorted 1:20
+## Conditions will be sorted 1:50
 
 store <- vector("list", length = parm$Ncond)
 
+# Create Counter for FMI
+
+
+
+# class(store)
 
 # store[[7]] <- n5
 
@@ -38,24 +43,28 @@ store_i <- vector("list", parm$iter)
 
 ###-----------------------------------------------------------------###
 # Simulation Loop
+start_time <- Sys.time()
 
 for (a in 1:parm$iter)
 {
-  #Generate Data
   
+  #Generate Data
   data <- try(simData(parm = parm,
                       infinity = "no"))
   
+  #Set/Reset counter
+  i = 1
+  
   #Generate Missing Values
-  for (b in 1:length(parm$mec))  #Loop for Mechanism
+  for (b in 1:length(parm$mec))  #Loop for Mechanism mec
   {
-    for (c in 1:length(parm$pm))  #Loop for Percent-Missing
+    for (c in 1:length(parm$pm))  #Loop for Percent-Missing pm
     {
       #Create MissingnessMatrix with TRUE/FALSE values
       MissingMatrix <- try(makeMissing(data = data,
                                 mechanism = parm$mec[[b]],
                                 pm = parm$pm[[c]],
-                                preds = parm$pred,
+                                preds = parm$Vecpred,
                                 snr = NULL
                                 ))
       #Impose Missingness
@@ -63,15 +72,16 @@ for (a in 1:parm$iter)
       MissingDf[MissingMatrix$r,1] <- NA 
       
       #Impute Missing Values
-      for (d in 1:length(parm$m))
+      for (d in 1:length(parm$m))  #Loop for Missing Values m
       {
+        #Impute Missing Data Sets
         ImpData <- try(mice(data = MissingDf,
                             m = parm$m[[d]],
                             method = "norm",
                             print = FALSE
                             ))
         
-        #Save a list of imputed data sets
+        #Save a List of Imputed Data Sets
         ImpListDf <- try(complete(data = ImpData,
                                   action = "all"
                                   ))
@@ -83,15 +93,22 @@ for (a in 1:parm$iter)
                        ))
         
         #Save FMIs to list
-        
+        store[[i]] <- fmi
+        i <- i + 1
       }
     }
   
   }
   
   #Save list to Location
-  X=X
+  store_i[[a]] <- store
+  write.table(data.frame(store), 
+              file = paste0("/home/BachelorThesisCode/results/results_i",a,".md"))
+  
 }
+
+end_time <- Sys.time()
+
 
 # End Simulation
 ###-----------------------------------------------------------------###
