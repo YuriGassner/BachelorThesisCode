@@ -5,7 +5,7 @@ parm <- list()
 parm$mec        <- c("MCAR", "MAR")               #Missingness mechanism
 parm$pm         <- c(0.1, 0.25, 0.5, 0.75, 0.9)   #Percent Missing
 parm$m          <- c(5, 50, 100, 250, 500)        #Number of imputations
-parm$iter       <- c(1)                           #Iterations
+parm$iter       <- c(1)                           #Iterations, WILL CHANGE TO 1000 IF CODE IS FULLY READY
 parm$n          <- c(100)                         #Sample size
 parm$Nfmi       <- c(1000000)                     #Large N to approximate infinity
 parm$rsq        <- c(0.4)                         #RSquared
