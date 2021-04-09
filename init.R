@@ -9,43 +9,8 @@ parm$iter       <- c(1)                           #Iterations
 parm$n          <- c(100)                         #Sample size
 parm$Nfmi       <- c(1000000)                     #Large N to approximate infinity
 parm$rsq        <- c(0.4)                         #RSquared
-parm$cov        <- c(0)                           #Covariance
+parm$cov        <- c(0.3)                         #Covariance (with infinite N, is equal to correlation)
 parm$snr        <- c(1)                           #Signal to Noise ratio
-parm$pred       <- c(3)                           #Number of Predictors
-
-
-
-
-# ### Stores values in a vector as for loops progress
-# 
-# vector <- vector("numeric")
-# u <- 1:4
-# 
-# for (i in u)
-# {
-#   f <- rnorm(n = parm$n, mean = 0, sd = 1)
-#   vector <- append(vector, f)
-# }
-# vector
-# 
-# ### Store values in a list 
-# 
-# list <- list()
-# 
-# for (i in u)
-# {
-#   g <- rnorm(n = parm$n, mean = 0, sd = 1)
-#   list[[i]] <- g
-#   
-# }
-# list
-# 
-# 
-# ### Rmvnorm (bastian)
-# 
-# covariance <- 0
-# nrpred <- 3
-# sigma <- matrix(covariance, nrpred, nrpred)
-# diag(sigma) <- 1.0
-# 
-# X <- rmvnorm(n = 100, mean = rep(0, nrpred), sigma = sigma)
+parm$pred       <- c(2)                           #Number of Predictors: X1, X2
+parm$Vecpred    <- c(1,1)                         #Vector of N pred, otherwise simLinearMissingness doesn't work
+parm$Ncond      <- c(50)                          #Number of conditions: mec x pm x m
