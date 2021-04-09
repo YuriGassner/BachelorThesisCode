@@ -85,99 +85,58 @@ makeMissing <- function(data,
 ###----------------------------------------------------------###
 ## Only works for 3 Predictors! 
 ## Only for the "true value" of the FMI, delete infinity=no since it is made with MI & SEMTOOLS
-getFMI <- function (data, infinity) 
+getFimlFmi <- function (data)
 {
+  dataX1 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
+  #column data.frames automatically into numeric vectors
   
-  ## NOT DONE YET !!!
-  if (infinity == "yes")
-  {
-    dataX2 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
-    #column data.frames automatically into numeric vectors
-    
-    colnames(dataX2) <- c("X2") #Name column
-    
-    #Set up Model
-    
-    data.cfa <- 'X1 =~ X2' 
-    step1.cfa <- cfa(data.cfa, data = dataX2, missing = "fiml", std.lv = TRUE) 
-    
-    se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
-    cov.cfa <- step1.cfa@implied[["cov"]][[1]]
-    means.cfa <- step1.cfa@implied[["mean"]][[1]]
-    
-    #Multiple model-implied cov by N/N-1, only worth doing with small N
-    
-    cov.cfa <- cov.cfa*(parm$Nfmi/(parm$Nfmi-1))
-    
-    #Sepcify row and columnnames according to model
-    
-    rownames(cov.cfa) <- c("X1")
-    colnames(cov.cfa) <- c("X1")
-    
-    #run the model with model-implied cov matrix and means as input
-    step2.cfa <- cfa(data.cfa,
-                     sample.cov = cov.cfa,
-                     sample.mean = means.cfa,
-                     sample.nobs = parm$Nfmi, 
-                     std.lv = TRUE,
-                     meanstructure = TRUE,
-                     information = "observed")
-    
-    se.step2.cfa <- parameterEstimates(step2.cfa)$se
-    
-    #Compute vector of fraction of missing information estimates
-    
-    fmi <- 1-(se.step2.cfa^2/se.cfa^2)
-    fmi
-  }
-  else if (infinity == "no")
-  {
-    
-    dataX2 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
-    #column data.frames automatically into numeric vectors
-    
-    colnames(dataX2) <- c("X2") #Name column
-    
-    #Set up Model
-    
-    data.cfa <- 'X1 =~ X2' 
-    step1.cfa <- cfa(data.cfa, data = dataX2, missing = "fiml", std.lv = TRUE) 
-    
-    se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa -> Fit -> se ; are the same values
-    cov.cfa <- step1.cfa@implied[["cov"]][[1]]
-    means.cfa <- step1.cfa@implied[["mean"]][[1]]
-    
-    #Multiple model-implied cov by N/N-1, only worth doing with small N
-    
-    cov.cfa <- cov.cfa*(parm$n/(parm$n-1))
-    
-    #Sepcify row and columnnames according to model
-    
-    rownames(cov.cfa) <- c("X2")
-    colnames(cov.cfa) <- c("X2")
-    
-    #run the model with model-implied cov matrix and means as input
-    step2.cfa <- cfa(data.cfa,
-                     sample.cov = cov.cfa,
-                     sample.mean = means.cfa,
-                     sample.nobs = parm$n, 
-                     std.lv = TRUE,
-                     meanstructure = TRUE,
-                     information = "observed")
-    
-    se.step2.cfa <- parameterEstimates(step2.cfa)$se
-    
-    #Compute vector of fraction of missing information estimates
-    
-    fmi <- 1-(se.step2.cfa^2/se.cfa^2)
-    fmi
-    
-  }
+  colnames(dataX1) <- c("X1") #Name column
   
-  else 
-  {
-    stop("Unknown or no Sample size specified")
-  }
+  #Set up Model
   
+  data.cfa <- 'X2 =~ X1' 
+  step1.cfa <- cfa(data.cfa, data = dataX1, missing = "fiml", std.lv = TRUE) 
+  
+  se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
+  cov.cfa <- step1.cfa@implied[["cov"]][[1]]
+  means.cfa <- step1.cfa@implied[["mean"]][[1]]
+  
+  #Multiple model-implied cov by N/N-1, only worth doing with small N
+  
+  cov.cfa <- cov.cfa*(parm$Nfmi/(parm$Nfmi-1))
+  
+  #Sepcify row and columnnames according to model
+  
+  rownames(cov.cfa) <- c("X1")
+  colnames(cov.cfa) <- c("X1")
+  
+  #run the model with model-implied cov matrix and means as input
+  step2.cfa <- cfa(data.cfa,
+                   sample.cov = cov.cfa,
+                   sample.mean = means.cfa,
+                   sample.nobs = parm$Nfmi, 
+                   std.lv = TRUE,
+                   meanstructure = TRUE,
+                   information = "observed")
+  
+  se.step2.cfa <- parameterEstimates(step2.cfa)$se
+  
+  #Compute vector of fraction of missing information estimates
+  
+  fmi <- 1-(se.step2.cfa^2/se.cfa^2)
+  fmi 
+  
+  
+  # ########################################
+  # ##Calculate "TRUE" FMI
+  # datainf <- simData(parm = parm,
+  #                  infinity = "yes")
+  # sd(datax$X1) #Approximately 1
+  # s <- sd(datax$X1)/sqrt(parm$Nfmi) #std. error approximately 0
+  # 
+  # se.real <- c(0,NA,NA,0,NA) #NA are also in the normal file, I dont know why
+  # 
+  # fmi <- 1 - (se.real^2/se.cfa^2)
+  # fmi
 }
 
