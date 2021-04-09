@@ -5,16 +5,14 @@ simData <- function (parm, infinity)
 {
   if (infinity == "no")
   {
-    nPred <- parm$pred
     sigma <- matrix(parm$cov, parm$pred, parm$pred)
     diag(sigma) <- 1.0
     
     #Generate data
-    X <- rmvnorm(n = parm$n, mean = rep(0, nPred), sigma = sigma)
+    #X1 will act as Y and X2 will 
+    X <- rmvnorm(n = parm$n, mean = rep(0, parm$pred), sigma = sigma)
     
-    Y <- rnorm(n = parm$n, mean = 0, sd = 1)
-    
-    data <- data.frame(X,Y)
+    data <- data.frame(X)
     
     data
   }
@@ -22,16 +20,13 @@ simData <- function (parm, infinity)
   else if (infinity == "yes")  #Approximate an infinite N to approximate a true FMI
     
   {
-    nPred <- parm$pred
     sigma <- matrix(parm$cov, parm$pred, parm$pred)
     diag(sigma) <- 1.0
     
     #Generate data
-    X <- rmvnorm(n = parm$Nfmi, mean = rep(0, nPred), sigma = sigma)
+    X <- rmvnorm(n = parm$Nfmi, mean = rep(0, parm$pred), sigma = sigma)
     
-    Y <- rnorm(n = parm$Nfmi, mean = 0, sd = 1)
-    
-    data <- data.frame(X,Y)
+    data <- data.frame(X)
     
     data
   }
@@ -58,7 +53,7 @@ makeMissing <- function(data,
   {
     out <- simLinearMissingness(pm       = pm,
                                 data     = data,
-                                snr      = snr,
+                                snr      = parm$snr,
                                 preds    = preds,
                                 type     = "high",
                                 optimize = FALSE)
@@ -88,18 +83,23 @@ makeMissing <- function(data,
 
 
 ###----------------------------------------------------------###
-
-calcFMI <- function (data, infinity)
+## Only works for 3 Predictors! 
+## Only for the "true value" of the FMI, delete infinity=no since it is made with MI & SEMTOOLS
+getFMI <- function (data, infinity) 
 {
   
+  ## NOT DONE YET !!!
   if (infinity == "yes")
   {
-    data1 <- data[,1:3] #Exclude Y
+    dataX2 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
+    #column data.frames automatically into numeric vectors
+    
+    colnames(dataX2) <- c("X2") #Name column
     
     #Set up Model
     
-    data.cfa <- 'Y =~ X1 + X2 + X3' 
-    step1.cfa <- cfa(data.cfa, data = data1, missing = "fiml", std.lv = TRUE) 
+    data.cfa <- 'X1 =~ X2' 
+    step1.cfa <- cfa(data.cfa, data = dataX2, missing = "fiml", std.lv = TRUE) 
     
     se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
     cov.cfa <- step1.cfa@implied[["cov"]][[1]]
@@ -111,8 +111,8 @@ calcFMI <- function (data, infinity)
     
     #Sepcify row and columnnames according to model
     
-    rownames(cov.cfa) <- c("X1","X2","X3")
-    colnames(cov.cfa) <- c("X1","X2","X3")
+    rownames(cov.cfa) <- c("X1")
+    colnames(cov.cfa) <- c("X1")
     
     #run the model with model-implied cov matrix and means as input
     step2.cfa <- cfa(data.cfa,
@@ -132,14 +132,18 @@ calcFMI <- function (data, infinity)
   }
   else if (infinity == "no")
   {
-    data1 <- data[,1:3] #Exclude Y
+    
+    dataX2 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
+    #column data.frames automatically into numeric vectors
+    
+    colnames(dataX2) <- c("X2") #Name column
     
     #Set up Model
     
-    data.cfa <- 'Y =~ X1 + X2 + X3' 
-    step1.cfa <- cfa(data.cfa, data = data1, missing = "fiml", std.lv = TRUE) 
+    data.cfa <- 'X1 =~ X2' 
+    step1.cfa <- cfa(data.cfa, data = dataX2, missing = "fiml", std.lv = TRUE) 
     
-    se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
+    se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa -> Fit -> se ; are the same values
     cov.cfa <- step1.cfa@implied[["cov"]][[1]]
     means.cfa <- step1.cfa@implied[["mean"]][[1]]
     
@@ -149,8 +153,8 @@ calcFMI <- function (data, infinity)
     
     #Sepcify row and columnnames according to model
     
-    rownames(cov.cfa) <- c("X1","X2","X3")
-    colnames(cov.cfa) <- c("X1","X2","X3")
+    rownames(cov.cfa) <- c("X2")
+    colnames(cov.cfa) <- c("X2")
     
     #run the model with model-implied cov matrix and means as input
     step2.cfa <- cfa(data.cfa,
@@ -167,6 +171,7 @@ calcFMI <- function (data, infinity)
     
     fmi <- 1-(se.step2.cfa^2/se.cfa^2)
     fmi
+    
   }
   
   else 
@@ -176,19 +181,9 @@ calcFMI <- function (data, infinity)
   
 }
 
+######################################################################################################
 
-###----------------------------------------------------------###
-
-
-impData <- function(data)
-{
-  
-}
-
-    
-###--------------------------------------------------------------------------###
-  
-  ## Simulate a nonresponse vector via a linear probability model:
+## Simulate a nonresponse vector via a linear probability model:
   simLinearMissingness <- function(pm,
                                    data,
                                    auc      = NULL,
