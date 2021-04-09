@@ -86,7 +86,7 @@ for (a in 1:parm$iter)
                                   action = "all"
                                   ))
         
-        #Calculate FMIs 
+        #Calculate FMIs with semTools as 'lavaan' only does ML fmi
         fmi <- try(fmi(data = ImpListDf,
                        method = "sat",
                        fewImps = TRUE
@@ -113,3 +113,8 @@ end_time <- Sys.time()
 
 # End Simulation
 ###-----------------------------------------------------------------###
+# Analysis
+# Read in CSV files
+# Average FMI estimate per condition
+# Calculate SE and CI of FMI estimates per condition
+
