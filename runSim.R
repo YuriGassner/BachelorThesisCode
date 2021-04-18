@@ -45,7 +45,8 @@ store_i <- vector("list", parm$iter)
 # Simulation Loop
 start_time <- Sys.time()
 
-for (a in 1:parm$iter)
+for (a in 1:parm$iter) ### KML: See comment in Bastian's code about main-style
+                       ### function.
 {
   
   #Generate Data
@@ -74,6 +75,7 @@ for (a in 1:parm$iter)
       #Impute Missing Values
       for (d in 1:length(parm$m))  #Loop for Missing Values m
       {
+          
         #Impute Missing Data Sets
         ImpData <- try(mice(data = MissingDf,
                             m = parm$m[[d]],
@@ -85,7 +87,8 @@ for (a in 1:parm$iter)
         ImpListDf <- try(complete(data = ImpData,
                                   action = "all"
                                   ))
-        
+
+                             
         #Calculate FMIs with semTools as 'lavaan' only does ML fmi
         fmi <- try(fmi(data = ImpListDf,
                        method = "sat",
@@ -101,7 +104,9 @@ for (a in 1:parm$iter)
   }
   
   #Save list to Location
-  store_i[[a]] <- store
+    store_i[[a]] <- store
+
+    ### KML: Save your output as RDS files.
   write.table(data.frame(store), 
               file     = paste0("results/data_iteration_",a,".csv")) 
   
