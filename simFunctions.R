@@ -1,10 +1,25 @@
 # Functions
 ##-------------------------------------------------------------------------------------------------------------------##
 
+### KML: This is just a function for me to use for testing.
+                                        #toyData <- function(n) {
+                                        #    sigma       <- matrix(0.3, 2, 2)
+                                        #    diag(sigma) <- 1.0
+                                        #    
+                                        #    dat1           <- rmvnorm(n, c(0, 0), sigma)
+                                        #    colnames(dat1) <- paste0("X", 1 : 2)
+                                        #    
+                                        #    r             <- as.logical(rbinom(n, 1, 0.3))
+                                        #    dat1[r, "X1"] <- NA
+                                        #    as.data.frame(dat1)
+                                        #}
+
+##-------------------------------------------------------------------------------------------------------------------##
+
 simData <- function (parm, infinity)
 {
-  if (infinity == "no")
-  {
+                                        #if (infinity == "no")
+                                        #{
     sigma <- matrix(parm$cov, parm$pred, parm$pred)
     diag(sigma) <- 1.0
     
@@ -15,26 +30,29 @@ simData <- function (parm, infinity)
     data <- data.frame(X)
     
     data
-  }
+
+### KML: You don't need this conditional logic. Just run the function with a
+### larger sample size specified.
+                                        #}
   
-  else if (infinity == "yes")  #Approximate an infinite N to approximate a true FMI
+                                        #else if (infinity == "yes")  #Approximate an infinite N to approximate a true FMI
     
-  {
-    sigma <- matrix(parm$cov, parm$pred, parm$pred)
-    diag(sigma) <- 1.0
+                                        #{
+                                        #  sigma <- matrix(parm$cov, parm$pred, parm$pred)
+                                        #  diag(sigma) <- 1.0
+                                        #  
+                                        #  #Generate data
+                                        #  X <- rmvnorm(n = parm$Nfmi, mean = rep(0, parm$pred), sigma = sigma)
+                                        #  
+                                        #  data <- data.frame(X)
+                                        #  
+                                        #  data
+                                        #}
     
-    #Generate data
-    X <- rmvnorm(n = parm$Nfmi, mean = rep(0, parm$pred), sigma = sigma)
-    
-    data <- data.frame(X)
-    
-    data
-  }
-  
-  else
-  {
-    stop("Undefined or unsupported Sample Size")
-  }
+                                        #else
+                                        #{
+                                        #  stop("Undefined or unsupported Sample Size")
+                                        #}
 }
 
 ##-------------------------------------------------------------------------------------------------------------------##
@@ -42,6 +60,9 @@ simData <- function (parm, infinity)
 # mechanism  - the mechanism of missing data, by default MCAR
 # percent    - the proportion of observations that should be set to missing (NA)
 # indices    - A vector of indices indicating which columns should contain missing values
+
+### KML: See comments in Bastian's code about this function.
+
 makeMissing <- function(data, 
                         mechanism="MCAR", 
                         pm, 
@@ -83,48 +104,62 @@ makeMissing <- function(data,
 
 
 ###----------------------------------------------------------###
+
+                                        #data <- toyData(1e7)
+
+### KML: I've edited the following code, so it works as expected, but it turns
+### out that you don't even need to specify your own function. The fmi()
+### function from semTools will do this calculation for you.
+
 ## Only works for 3 Predictors! 
 ## Only for the "true value" of the FMI, delete infinity=no since it is made with MI & SEMTOOLS
 getFimlFmi <- function (data)
 {
-  dataX1 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
-  #column data.frames automatically into numeric vectors
+                                        #dataX1 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
+                                        #column data.frames automatically into numeric vectors
   
-  colnames(dataX1) <- c("X1") #Name column
+                                        #colnames(dataX1) <- c("X1") #Name column
+    
+    ## Set up Model
+    
+                                        #data.cfa <- 'X2 =~ X1' 
+                                        #step1.cfa <- cfa(data.cfa, data = dataX1, missing = "fiml", std.lv = TRUE) 
+
+    data.cfa <- "X1 ~~ X2" 
+    step1.cfa <- cfa(data.cfa, data = data, missing = "fiml") 
+       
+    se.cfa    <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
+    cov.cfa   <- step1.cfa@implied[["cov"]][[1]]
+    means.cfa <- step1.cfa@implied[["mean"]][[1]]
+      
+    ## Multiple model-implied cov by N/N-1, only worth doing with small N
+    cov.cfa <- cov.cfa * (nrow(data) / (nrow(data) - 1))
+    
+                                        #Sepcify row and columnnames according to model
   
-  #Set up Model
+    rownames(cov.cfa) <- colnames(cov.cfa) <- c("X1", "X2")
   
-  data.cfa <- 'X2 =~ X1' 
-  step1.cfa <- cfa(data.cfa, data = dataX1, missing = "fiml", std.lv = TRUE) 
-  
-  se.cfa <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
-  cov.cfa <- step1.cfa@implied[["cov"]][[1]]
-  means.cfa <- step1.cfa@implied[["mean"]][[1]]
-  
-  #Multiple model-implied cov by N/N-1, only worth doing with small N
-  
-  cov.cfa <- cov.cfa*(parm$Nfmi/(parm$Nfmi-1))
-  
-  #Sepcify row and columnnames according to model
-  
-  rownames(cov.cfa) <- c("X1")
-  colnames(cov.cfa) <- c("X1")
-  
-  #run the model with model-implied cov matrix and means as input
-  step2.cfa <- cfa(data.cfa,
-                   sample.cov = cov.cfa,
-                   sample.mean = means.cfa,
-                   sample.nobs = parm$Nfmi, 
-                   std.lv = TRUE,
-                   meanstructure = TRUE,
-                   information = "observed")
-  
-  se.step2.cfa <- parameterEstimates(step2.cfa)$se
-  
-  #Compute vector of fraction of missing information estimates
-  
-  fmi <- 1-(se.step2.cfa^2/se.cfa^2)
-  fmi 
+    ## run the model with model-implied cov matrix and means as input
+                                        #step2.cfa <- cfa(data.cfa,
+                                        #                 sample.cov = cov.cfa,
+                                        #                 sample.mean = means.cfa,
+                                        #                 sample.nobs = parm$Nfmi, 
+                                        #                 std.lv = TRUE,
+                                        #                 meanstructure = TRUE,
+                                        #                 information = "observed")
+    
+    step2.cfa <- cfa(data.cfa,
+                     sample.cov    = cov.cfa,
+                     sample.mean   = means.cfa,
+                     sample.nobs   = nrow(data), 
+                     meanstructure = TRUE,
+                     information   = "observed")
+    
+    se.step2.cfa <- parameterEstimates(step2.cfa)$se
+    
+    ## Compute vector of fraction of missing information estimates
+    fmi <- 1 - (se.step2.cfa^2 / se.cfa^2)
+    fmi 
   
   
   # ########################################
