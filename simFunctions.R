@@ -30,7 +30,26 @@ simData <- function (parm)
     data
 
 }
-### KML: See comments in Bastian's code about this function.
+
+
+##-------------------------------------------------------------------------------------------------------------------##
+
+simDataInf <- function (parm)
+{
+  
+  sigma <- matrix(parm$cov, parm$pred, parm$pred)
+  diag(sigma) <- 1.0
+  
+  #Generate data
+  X <- rmvnorm(n = parm$Nfmi, mean = rep(0, parm$pred), sigma = sigma)
+  
+  data <- data.frame(X)
+  
+  data
+  
+}
+
+##-------------------------------------------------------------------------------------------------------------------##
 
 makeMissing <- function(data, 
                         mechanism="MCAR", 
@@ -77,7 +96,7 @@ makeMissing <- function(data,
 }
 
 
-###----------------------------------------------------------###
+##-------------------------------------------------------------------------------------------------------------------##
 
                                         #data <- toyData(1e7)
 
@@ -149,3 +168,191 @@ getFimlFmi <- function (data)
   # fmi
 }
 
+
+
+##-------------------------------------------------------------------------------------------------------------------##
+# Calculate each cell of the crossed-condition matrix/One repetition of the simulation
+doRep <- function(conds, parm)
+{
+  #Simulate data only once per iteration as data-generation parameters are not changing
+  data_main <- try(simData(parm = parm))
+  
+  
+  for (i in 1 : nrow(conds))
+  {
+    
+    #Create a seperate data matrix to avoid possible problems
+    data <- data_main
+    
+    
+    #Save current values of the varying values
+    parm$m <- conds[i, "m"]
+    parm$mec <- conds[i, "mec"]
+    parm$pm <- conds[i, "pm"]
+    
+    
+    #Poke holes into the data
+    MissingData <- try(makeMissing(data = data,
+                                     mechanism = parm$mec,
+                                     pm = parm$pm,
+                                     preds = parm$Vecpred,
+                                     snr = NULL
+    ))
+    
+    
+    #Impute missing values
+    impData <- try(mice(data = MissingData,
+                        m = parm$m,
+                        method = "norm",
+                        print = FALSE
+    ))
+    
+    
+    #Save a list of imputed data sets
+    impListdf <- try(complete(data = impData,
+                              action = "all"
+    ))
+    
+    
+    #Compute FMIs 
+    fmi <- try(fmi(data = impListdf,
+                   method = "sat",
+                   fewImps = TRUE
+    ))
+    
+    
+    #Save FMIs to list
+    store[[i]] <- fmi
+    
+  }
+  
+  
+  #Write list to disc
+  saveRDS(store, 
+          file = paste0("results/data_it_",a,".rds"))
+  
+  
+  #Increase counter by 1
+  a <- a + 1
+  
+}
+
+##-------------------------------------------------------------------------------------------------------------------##
+
+
+getTrueFMI <- function(conds, parm)
+{
+  
+  #Create one dataset with N = 500.000
+  data_main <- simDataInf(parm = parm)
+  storage <- vector("list", length = nrow(conds))
+  
+  
+  for(f in 1 : nrow(conds))
+  {
+    
+    #Save current values of the varying values
+    parm$m <- conds[i, "m"]
+    parm$mec <- conds[i, "mec"]
+    parm$pm <- conds[i, "pm"]
+    
+    
+    #Keep reusing the same previously created dataset
+    data <- data_main
+    
+    
+    #Poke holes into the data set
+    MissingData <- try(makeMissing(data = data,
+                                   mechanism = parm$mec,
+                                   pm = parm$pm,
+                                   preds = parm$Vecpred,
+                                   snr = NULL
+    ))
+    
+    
+    #Impute missing values via FIML and calculate FMI
+    fmi <- try(fmi(data = MissingData,
+                   method = "sat",
+                   ### POTENTIALLY EXCLUDE X2 AS THERE ARE NO MISSING VALUES? but also maybe not
+    ))
+    
+    
+    #Save FMIs to list
+    storage[[f]] <- fmi
+    
+    
+  }
+  
+  
+  saveRDS(storage,
+          file = paste0("results/data_trueFMI",f,".rds"))
+  
+  
+}
+
+
+# ##-------------------------------------------------------------------------------------------------------------------##
+# # Calculate each cell of the crossed-condition matrix/One repetition of the simulation
+# doRepMultipleData <- function(conds, parm)
+# {
+# 
+#   
+#   
+#   for (i in 1 : nrow(conds))
+#   {
+#     
+#     #Simulate data only once per iteration as data-generation parameters are not changing
+#     data <- try(simData(parm = parm))
+#     
+#     
+#     #Save current values of the varying values
+#     parm$m <- conds[i, "m"]
+#     parm$mec <- conds[i, "mec"]
+#     parm$pm <- conds[i, "pm"]
+#     
+#     
+#     #Create missingdata matrix
+#     missingMatrix <- try(makeMissing(data = data,
+#                                      mechanism = parm$mec,
+#                                      pm = parm$pm,
+#                                      preds = parm$Vecpred,
+#                                      snr = NULL
+#     ))
+#     
+#     
+#     #Impute missing values
+#     impData <- try(mice(data = missingMatrix,
+#                         m = parm$m,
+#                         method = "norm",
+#                         print = FALSE
+#     ))
+#     
+#     
+#     #Save a list of imputed data sets
+#     impListdf <- try(complete(data = impData,
+#                               action = "all"
+#     ))
+#     
+#     
+#     #Compute FMIs 
+#     fmi <- try(fmi(data = impListdf,
+#                    method = "sat",
+#                    fewImps = TRUE
+#     ))
+#     
+#     
+#     #Save FMIs to list
+#     store[[i]] <- fmi
+#     
+#   }
+#   
+#   
+#   #Write list to disc
+#   saveRDS(store, 
+#           file = paste0("results/data_it_",b,".rds"))
+#   
+#   
+#   #Increase counter by 1
+#   b <- b + 1
+#   
+# }
