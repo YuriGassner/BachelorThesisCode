@@ -245,7 +245,6 @@ getTrueFMI <- function(conds, parm)
   
   #Create one dataset with N = 500.000
   data_main <- simDataInf(parm = parm)
-  storage <- vector("list", length = nrow(conds))
   
   
   for(f in 1 : nrow(conds))
