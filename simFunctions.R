@@ -16,51 +16,20 @@
 
 ##-------------------------------------------------------------------------------------------------------------------##
 
-simData <- function (parm, infinity)
+simData <- function (parm)
 {
-                                        #if (infinity == "no")
-                                        #{
+                                       
     sigma <- matrix(parm$cov, parm$pred, parm$pred)
     diag(sigma) <- 1.0
     
     #Generate data
-    #X1 will act as Y and X2 will 
     X <- rmvnorm(n = parm$n, mean = rep(0, parm$pred), sigma = sigma)
     
     data <- data.frame(X)
     
     data
 
-### KML: You don't need this conditional logic. Just run the function with a
-### larger sample size specified.
-                                        #}
-  
-                                        #else if (infinity == "yes")  #Approximate an infinite N to approximate a true FMI
-    
-                                        #{
-                                        #  sigma <- matrix(parm$cov, parm$pred, parm$pred)
-                                        #  diag(sigma) <- 1.0
-                                        #  
-                                        #  #Generate data
-                                        #  X <- rmvnorm(n = parm$Nfmi, mean = rep(0, parm$pred), sigma = sigma)
-                                        #  
-                                        #  data <- data.frame(X)
-                                        #  
-                                        #  data
-                                        #}
-    
-                                        #else
-                                        #{
-                                        #  stop("Undefined or unsupported Sample Size")
-                                        #}
 }
-
-##-------------------------------------------------------------------------------------------------------------------##
-# data       - the data frame which should get missing observations
-# mechanism  - the mechanism of missing data, by default MCAR
-# percent    - the proportion of observations that should be set to missing (NA)
-# indices    - A vector of indices indicating which columns should contain missing values
-
 ### KML: See comments in Bastian's code about this function.
 
 makeMissing <- function(data, 
@@ -72,14 +41,17 @@ makeMissing <- function(data,
   #MAR missing data mechanism
   if(mechanism=="MAR")
   {
+    #Specify where holes will be poked into the data sets
     out <- simLinearMissingness(pm       = pm,
                                 data     = data,
                                 snr      = parm$snr,
                                 preds    = preds,
                                 type     = "high",
                                 optimize = FALSE)
-    
-    out
+    #Poke Holes
+    missingdf <- data
+    missingdf[out$r , 1] <- NA
+    missingdf
   }
   
   #MCAR missing data mechanism
@@ -94,7 +66,9 @@ makeMissing <- function(data,
     #auc = auc,
     #snr = sd(eta) / sqrt(var(eta2) - var(eta)))
     #return
-    out
+    missingdf <- data
+    missingdf[out$r , 1] <- NA
+    missingdf
   }
   else
   {
