@@ -410,3 +410,212 @@ se.step2.cfa <- parameterEstimates(step2.cfa)$se
 fmi <- 1 - (se.step2.cfa^2/se.cfa^2)
 fmi
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##################################################
+
+##################################################
+
+for (i in 1 : nrow(conds))
+{
+  
+  #Save current values of the varying values
+  parm$m <- conds[i, "m"]
+  parm$mec <- conds[i, "mec"]
+  parm$pm <- conds[i, "pm"]
+  
+  
+  #Simulate Data
+  data <- try(simData(parm = parm,))
+  
+  
+  #Create Missingdata Matrix
+  missingMatrix <- try(makeMissing(data = data,
+                                   mechanism = parm$mec,
+                                   pm = parm$pm,
+                                   preds = parm$Vecpred,
+                                   snr = NULL
+  ))
+  
+  
+  # #Impose Missingness
+  # missingdf <- data
+  # missingdf[missingMatrix$r , 1] <- NA
+  
+  
+  #Impute Missing Values
+  impData <- try(mice(data = missingdf,
+                      m = parm$m,
+                      method = "norm",
+                      print = FALSE
+  ))
+  
+  
+  #Save a List of Imputed Data Sets
+  impListdf <- try(complete(data = impData,
+                            action = "all"
+  ))
+  
+  
+  #Compute FMIs 
+  fmi <- try(fmi(data = impListdf,
+                 method = "sat",
+                 fewImps = TRUE
+  ))
+  
+  
+  #Save FMIs to List
+  store[[i]] <- fmi
+  
+}
+
+
+#Write List to disc
+saveRDS(store, 
+        file = paste0("results/data_it_",a,".rds"))
+
+
+
+
+
+
+
+
+
+data <-  simData(parm = parm)
+
+missingdf <- makeMissing(data = data,
+                         mechanism = "MCAR",
+                         pm = 0.5,
+                         preds = parm$Vecpred,
+                         snr = NULL)
+
+
+
+
+
+
+
+start_time <- Sys.time()
+doRep(conds = conds, parm = parm)
+end_time <- Sys.time()
+
+
+
+
+##-------------------------------------------------------------------------------------------------------------------##
+#True FMI calculation due to asymptotic approximation
+
+#Create one dataset with N = 500.000
+data_main <- simDataInf(parm = parm)
+storage <- vector("list", length = nrow(conds))
+
+for(f in 1 : nrow(conds))
+{
+  
+  #Save current values of the varying values
+  parm$m <- conds[i, "m"]
+  parm$mec <- conds[i, "mec"]
+  parm$pm <- conds[i, "pm"]
+  
+  
+  #Keep reusing the same previously created dataset
+  data <- data_main
+  
+  
+  #Poke holes into the data set
+  MissingData <- try(makeMissing(data = data,
+                                 mechanism = parm$mec,
+                                 pm = parm$pm,
+                                 preds = parm$Vecpred,
+                                 snr = NULL
+                                 ))
+  
+  
+  #Impute missing values via FIML and calculate FMI
+  fmi <- try(fmi(data = MissingData,
+                 method = "sat",
+                 ### POTENTIALLY EXCLUDE X2 AS THERE ARE NO MISSING VALUES? but also maybe not
+                 ))
+  
+  
+  #Save FMIs to list
+  storage[[f]] <- fmi
+  
+}
+
+saveRDS(storage,
+        file = paste0("results/data_trueFMI",f,".rds"))
+
+
+
+getTrueFMI <- function(conds, parm)
+{
+  
+  #Create one dataset with N = 500.000
+  data_main <- simDataInf(parm = parm)
+  storage <- vector("list", length = nrow(conds))
+  
+  
+  for(f in 1 : nrow(conds))
+  {
+    
+    #Save current values of the varying values
+    parm$m <- conds[i, "m"]
+    parm$mec <- conds[i, "mec"]
+    parm$pm <- conds[i, "pm"]
+    
+    
+    #Keep reusing the same previously created dataset
+    data <- data_main
+    
+    
+    #Poke holes into the data set
+    MissingData <- try(makeMissing(data = data,
+                                   mechanism = parm$mec,
+                                   pm = parm$pm,
+                                   preds = parm$Vecpred,
+                                   snr = NULL
+    ))
+    
+    
+    #Impute missing values via FIML and calculate FMI
+    fmi <- try(fmi(data = MissingData,
+                   method = "sat",
+                   ### POTENTIALLY EXCLUDE X2 AS THERE ARE NO MISSING VALUES? but also maybe not
+    ))
+    
+    
+    #Save FMIs to list
+    storage[[f]] <- fmi
+    
+    
+  }
+  
+  
+  saveRDS(storage,
+          file = paste0("results/data_trueFMI",f,".rds"))
+  
+  
+}
+
