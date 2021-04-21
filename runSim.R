@@ -16,16 +16,85 @@ source("simMissingness.R")
 
 set.seed(541491)
 
+##################################################
 
-## Storing the data as a list since the output of the analyses are multiple matrices
-## Conditions will be sorted 1:50
+for (i in 1 : nrow(conds))
+{
+  
+  #Save current values of the varying values
+  parm$m <- conds[i, "m"]
+  parm$mec <- conds[i, "mec"]
+  parm$pm <- conds[i, "pm"]
+  
+  
+  #Simulate Data
+  data <- try(simData(parm = parm,))
+  
+  
+  #Create Missingdata Matrix
+  missingMatrix <- try(makeMissing(data = data,
+                                   mechanism = parm$mec,
+                                   pm = parm$pm,
+                                   preds = parm$Vecpred,
+                                   snr = NULL
+  ))
+  
+  
+  # #Impose Missingness
+  # missingdf <- data
+  # missingdf[missingMatrix$r , 1] <- NA
+  
+  
+  #Impute Missing Values
+  impData <- try(mice(data = missingdf,
+                      m = parm$m,
+                      method = "norm",
+                      print = FALSE
+  ))
+  
+  
+  #Save a List of Imputed Data Sets
+  impListdf <- try(complete(data = impData,
+                            action = "all"
+  ))
+  
+  
+  #Compute FMIs 
+  fmi <- try(fmi(data = impListdf,
+                 method = "sat",
+                 fewImps = TRUE
+  ))
+  
+  
+  #Save FMIs to List
+  store[[i]] <- fmi
 
-store <- vector("list", length = parm$Ncond)
-
-# Create Counter for FMI
+}
 
 
+#Write List to disc
+saveRDS(store, 
+        file = paste0("results/data_it_",a,".rds"))
 
+
+
+
+
+
+#######
+# Notes: Rewrite Loopstructure, Create "Condition Matrix" -> flattens out the loops
+#        Label the conditions somehow?? 
+#        
+######
+#  expand.grid function (vectors that are named. e.g. imp= imp) creates a data frame
+#  rows of this condition matrix key out the repetitions
+#  take the values from the condition matrix x <- conds[i, "rsq"]
+#  cbind the condition matrix on the output
+######
+#  FMI with large N, poke holes into it and run semTools function
+#  Create 10 mega datasets for Mechanism X PM conditions 
+#  
+######
 # class(store)
 
 # store[[7]] <- n5
@@ -108,7 +177,7 @@ for (a in 1:parm$iter) ### KML: See comment in Bastian's code about main-style
 
     ### KML: Save your output as RDS files.
   write.table(data.frame(store), 
-              file     = paste0("results/data_iteration_",a,".csv")) 
+              file     = paste0("results/data_iteration_",a,".csv")) ## SAVE AS RDS
   
 }
 
