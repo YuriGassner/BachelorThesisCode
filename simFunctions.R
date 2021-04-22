@@ -247,7 +247,7 @@ getTrueFMI <- function(conds, parm)
   data_main <- simDataInf(parm = parm)
   
   
-  for(f in 1 : nrow(conds))
+  for(i in 1 : nrow(conds))
   {
     
     #Save current values of the varying values
@@ -277,20 +277,39 @@ getTrueFMI <- function(conds, parm)
     
     
     #Save FMIs to list
-    storage[[f]] <- fmi
+    storage[[i]] <- fmi
     
     
   }
   
   
   saveRDS(storage,
-          file = paste0("results/data_trueFMI",f,".rds"))
+          file = paste0("results/data_trueFMI",i,".rds"))
   
   
 }
 
 
-# ##-------------------------------------------------------------------------------------------------------------------##
+##-------------------------------------------------------------------------------------------------------------------##
+#Reusing the big impSet to save computational cost
+#Adjusts the number of m to the newly specified m while maintaining the big impList of m = 500
+
+adjustImpList <- function(impList, parm)
+{
+  out <- impList
+  r <- sample(1:length(out), length(out)*parm$pm)
+  tmp <- rep(FALSE, length(out))
+  tmp[r] <- TRUE
+  r <- tmp
+  list <- list(r = r)
+  impList2 <- out
+  impList2[list$r] <- NULL
+  impList2
+}
+
+
+
+##-------------------------------------------------------------------------------------------------------------------##
 # # Calculate each cell of the crossed-condition matrix/One repetition of the simulation
 # doRepMultipleData <- function(conds, parm)
 # {
