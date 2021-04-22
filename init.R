@@ -25,3 +25,11 @@ store <- vector("list", length = nrow(conds))     #List of matrices for temporar
 storage <- vector("list", length = nrow(conds))   #List of matrices for temporary storage of the trueFMI values
 a <- 1                                            #Counter for storing the files doRep
 # b <- 1                                          #Counter for storing the files doRepMultipleData
+
+
+# old matrix
+# mec2           <- c("MCAR", "MAR")               #Missingness mechanism
+# pm2             <- c(0.1, 0.25, 0.5, 0.75, 0.9)   #Percent Missing
+# m2               <- c(5, 50, 100, 250, 500)        #Number of imputations
+# 
+# conds2 <- expand.grid(mec = mec2, pm = pm2, m = m2)  
