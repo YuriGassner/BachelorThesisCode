@@ -35,22 +35,6 @@ simData <- function (parm, N)
 
 ##-------------------------------------------------------------------------------------------------------------------##
 
-# simDataInf <- function (parm, N)
-# {
-#   
-#   n <- N
-#   sigma <- matrix(parm$cov, parm$pred, parm$pred)
-#   diag(sigma) <- 1.0
-#   
-#   #Generate data
-#   X <- rmvnorm(n = n, mean = rep(0, parm$pred), sigma = sigma)
-#   
-#   data <- data.frame(X)
-#   
-#   data
-#   
-# }
-
 ##-------------------------------------------------------------------------------------------------------------------##
 
 makeMissing <- function(data, 
@@ -112,77 +96,6 @@ makeMissing <- function(data,
 }
 
 
-##-------------------------------------------------------------------------------------------------------------------##
-
-                                        #data <- toyData(1e7)
-
-### KML: I've edited the following code, so it works as expected, but it turns
-### out that you don't even need to specify your own function. The fmi()
-### function from semTools will do this calculation for you.
-
-## Only works for 3 Predictors! 
-## Only for the "true value" of the FMI, delete infinity=no since it is made with MI & SEMTOOLS
-getFimlFmi <- function (data)
-{
-                                        #dataX1 <- data.frame(data[,1]) #X2 as a predictor of the missingness in X1; Has to be a data.frame, R converts single
-                                        #column data.frames automatically into numeric vectors
-  
-                                        #colnames(dataX1) <- c("X1") #Name column
-    
-    ## Set up Model
-    
-                                        #data.cfa <- 'X2 =~ X1' 
-                                        #step1.cfa <- cfa(data.cfa, data = dataX1, missing = "fiml", std.lv = TRUE) 
-
-    data.cfa <- "X1 ~~ X2" 
-    step1.cfa <- cfa(data.cfa, data = data, missing = "fiml") 
-       
-    se.cfa    <- parameterEstimates(step1.cfa)$se #step1.cfa - Fit - se ; are the same values
-    cov.cfa   <- step1.cfa@implied[["cov"]][[1]]
-    means.cfa <- step1.cfa@implied[["mean"]][[1]]
-      
-    ## Multiple model-implied cov by N/N-1, only worth doing with small N
-    cov.cfa <- cov.cfa * (nrow(data) / (nrow(data) - 1))
-    
-                                        #Sepcify row and columnnames according to model
-  
-    rownames(cov.cfa) <- colnames(cov.cfa) <- c("X1", "X2")
-  
-    ## run the model with model-implied cov matrix and means as input
-                                        #step2.cfa <- cfa(data.cfa,
-                                        #                 sample.cov = cov.cfa,
-                                        #                 sample.mean = means.cfa,
-                                        #                 sample.nobs = parm$Nfmi, 
-                                        #                 std.lv = TRUE,
-                                        #                 meanstructure = TRUE,
-                                        #                 information = "observed")
-    
-    step2.cfa <- cfa(data.cfa,
-                     sample.cov    = cov.cfa,
-                     sample.mean   = means.cfa,
-                     sample.nobs   = nrow(data), 
-                     meanstructure = TRUE,
-                     information   = "observed")
-    
-    se.step2.cfa <- parameterEstimates(step2.cfa)$se
-    
-    ## Compute vector of fraction of missing information estimates
-    fmi <- 1 - (se.step2.cfa^2 / se.cfa^2)
-    fmi 
-  
-  
-  # ########################################
-  # ##Calculate "TRUE" FMI
-  # datainf <- simData(parm = parm,
-  #                  infinity = "yes")
-  # sd(datax$X1) #Approximately 1
-  # s <- sd(datax$X1)/sqrt(parm$Nfmi) #std. error approximately 0
-  # 
-  # se.real <- c(0,NA,NA,0,NA) #NA are also in the normal file, I dont know why
-  # 
-  # fmi <- 1 - (se.real^2/se.cfa^2)
-  # fmi
-}
 
 ##-------------------------------------------------------------------------------------------------------------------##
 #New doRep function saving the impList 
@@ -245,7 +158,8 @@ doRep2 <- function(conds, parm)
     
     else if(check ==  "FALSE")
     {
-     impList <- adjustImpList(impListdf = impListdf, parm = parm)
+     impList <- adjustImpList(impListdf = impListdf,
+                              parm = parm)
      
     }
     
@@ -267,7 +181,7 @@ doRep2 <- function(conds, parm)
   
   #Write list to disc
   saveRDS(store, 
-          file = paste0("results/data_it_",a,".rds"))
+          file = paste0("results/doRep2_i2.rds"))
   
   
 }
@@ -333,7 +247,7 @@ doRep <- function(conds, parm)
   
   #Write list to disc
   saveRDS(store, 
-          file = paste0("results/data_it_",a,".rds"))
+          file = paste0("results/doRep_i1.rds"))
   
   
   #Increase counter by 1
@@ -431,67 +345,3 @@ adjustImpList <- function(impListdf, parm)
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
-# # Calculate each cell of the crossed-condition matrix/One repetition of the simulation
-# doRepMultipleData <- function(conds, parm)
-# {
-# 
-#   
-#   
-#   for (i in 1 : nrow(conds))
-#   {
-#     
-#     #Simulate data only once per iteration as data-generation parameters are not changing
-#     data <- try(simData(parm = parm))
-#     
-#     
-#     #Save current values of the varying values
-#     parm$m <- conds[i, "m"]
-#     parm$mec <- conds[i, "mec"]
-#     parm$pm <- conds[i, "pm"]
-#     
-#     
-#     #Create missingdata matrix
-#     missingMatrix <- try(makeMissing(data = data,
-#                                      mechanism = parm$mec,
-#                                      pm = parm$pm,
-#                                      preds = parm$Vecpred,
-#                                      snr = NULL
-#     ))
-#     
-#     
-#     #Impute missing values
-#     impData <- try(mice(data = missingMatrix,
-#                         m = parm$m,
-#                         method = "norm",
-#                         print = FALSE
-#     ))
-#     
-#     
-#     #Save a list of imputed data sets
-#     impListdf <- try(complete(data = impData,
-#                               action = "all"
-#     ))
-#     
-#     
-#     #Compute FMIs 
-#     fmi <- try(fmi(data = impListdf,
-#                    method = "sat",
-#                    fewImps = TRUE
-#     ))
-#     
-#     
-#     #Save FMIs to list
-#     store[[i]] <- fmi
-#     
-#   }
-#   
-#   
-#   #Write list to disc
-#   saveRDS(store, 
-#           file = paste0("results/data_it_",b,".rds"))
-#   
-#   
-#   #Increase counter by 1
-#   b <- b + 1
-#   
-# }
