@@ -18,10 +18,21 @@ set.seed(541491)
 
 
 #### STILL NEEDS: 
-# CBIND the condition matrix on the output
 # Fix counter for doRep 
-# Test trueFMI calculation
 
+
+# Create one giant imputation list for 0.9pm and then just add "real" values to achieve 0.75/0.5/0.25/0.1 pm 
+# Would result in comp only needing one third of the time (thirds comp time)
+# Ask kyle whether you can sample from the subsample (90%)? Should create bias if I am not mistaken
+# Any other way to ensure that the same imputed sets are still useable? 
+# Using the 500m list for subsequent imputations should save 44,8% of the comp time (nearly halves comp time)
+# Both potentially reduce the total time needed to 8.8h
+
+
+getTrueFMI(conds, parm)
+start_time <- 13.01
+end_time <- Sys.time()
+#5min for one run
 
 ##-------------------------------------------------------------------------------------------------------------------##
 #Notes
@@ -39,6 +50,26 @@ set.seed(541491)
 #  Does the a + 1 counter still work for parallelisation
 ##-------------------------------------------------------------------------------------------------------------------##
 #Main Simulation
+
+
+start_time <- Sys.time()
+
+doRep2(conds = conds, parm = parm)
+
+end_time2 <- Sys.time()
+
+doRep(conds = conds, parm = parm)
+
+end_time1 <- Sys.time()
+
+dorep2time <- end_time2 - start_time
+
+dorep1time <- end_time1 - end_time2
+
+#Rep2 currently saves about half a minute
+#Rep2 best time: 9.9min
+
+
 
 start_time <- Sys.time()
 
