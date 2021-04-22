@@ -16,14 +16,15 @@
 
 ##-------------------------------------------------------------------------------------------------------------------##
 
-simData <- function (parm)
+simData <- function (parm, N)
 {
-                                       
+  
+    n <- N                                   
     sigma <- matrix(parm$cov, parm$pred, parm$pred)
     diag(sigma) <- 1.0
     
     #Generate data
-    X <- rmvnorm(n = parm$n, mean = rep(0, parm$pred), sigma = sigma)
+    X <- rmvnorm(n = n, mean = rep(0, parm$pred), sigma = sigma)
     
     data <- data.frame(X)
     
@@ -34,20 +35,21 @@ simData <- function (parm)
 
 ##-------------------------------------------------------------------------------------------------------------------##
 
-simDataInf <- function (parm)
-{
-  
-  sigma <- matrix(parm$cov, parm$pred, parm$pred)
-  diag(sigma) <- 1.0
-  
-  #Generate data
-  X <- rmvnorm(n = parm$Nfmi, mean = rep(0, parm$pred), sigma = sigma)
-  
-  data <- data.frame(X)
-  
-  data
-  
-}
+# simDataInf <- function (parm, N)
+# {
+#   
+#   n <- N
+#   sigma <- matrix(parm$cov, parm$pred, parm$pred)
+#   diag(sigma) <- 1.0
+#   
+#   #Generate data
+#   X <- rmvnorm(n = n, mean = rep(0, parm$pred), sigma = sigma)
+#   
+#   data <- data.frame(X)
+#   
+#   data
+#   
+# }
 
 ##-------------------------------------------------------------------------------------------------------------------##
 
@@ -182,6 +184,94 @@ getFimlFmi <- function (data)
   # fmi
 }
 
+##-------------------------------------------------------------------------------------------------------------------##
+#New doRep function saving the impList 
+
+doRep2 <- function(conds, parm)
+{
+  data_main <- try(simData(parm = parm, N = parm$n))
+  
+  
+  for (i in 1 : nrow(conds))
+  {
+    
+    #Create a seperate data matrix to avoid possible problems
+    data <- data_main
+    
+    
+    #Save current values of pm and mec to check if new imputed data sets need to be created
+    pm <- parm$pm
+    mec <- parm$mec
+    m <- parm$m
+    
+    #Save current values of the varying values
+    parm$m <- conds[i, "m"]
+    parm$mec <- conds[i, "mec"]
+    parm$pm <- conds[i, "pm"]
+    
+    
+    check <- (is.null(pm) | is.null(mec)) || (pm != parm$pm | mec != parm$mec)
+    #Is TRUE when either pm/mec equals NULL OR when either pm/mec are not the same as parm$pm/mec
+    #When TRUE: new imputation list needs to be generated
+    #Is FALSE when either pm/mec is not null OR when either pm/mec are the same as parm$pm/mec
+    #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
+    
+    if(check == "TRUE")
+    {
+      MissingData <- try(makeMissing(data = data,
+                                     mechanism = parm$mec,
+                                     pm = parm$pm,
+                                     preds = parm$Vecpred,
+                                     snr = NULL
+      ))
+      
+      
+      #Impute missing values
+      impData <- try(mice(data = MissingData,
+                          m = parm$m,
+                          method = "norm",
+                          print = FALSE
+      ))
+      
+      
+      #Save a list of imputed data sets
+      impListdf <- try(complete(data = impData,
+                                action = "all"
+      ))
+      
+      impList <- impListdf
+      
+    }
+    
+    else if(check ==  "FALSE")
+    {
+     impList <- adjustImpList(impListdf = impListdf, parm = parm)
+     
+    }
+    
+    else print("something went wrong")     #Very necessary
+    
+    
+    #Calculate FMI
+    fmi <- try(fmi(data = impList,
+                   method = "sat",
+                   fewImps = TRUE
+    ))
+    
+    
+    #Save FMIs to list
+    store[[i]] <- fmi
+    
+  }
+  
+  
+  #Write list to disc
+  saveRDS(store, 
+          file = paste0("results/data_it_",a,".rds"))
+  
+  
+}
+
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
@@ -189,7 +279,7 @@ getFimlFmi <- function (data)
 doRep <- function(conds, parm)
 {
   #Simulate data only once per iteration as data-generation parameters are not changing
-  data_main <- try(simData(parm = parm))
+  data_main <- try(simData(parm = parm, N = parm$n))
   
   
   for (i in 1 : nrow(conds))
@@ -258,7 +348,7 @@ getTrueFMI <- function(conds, parm)
 {
   
   #Create one dataset with N = 500.000
-  data_main <- simDataInf(parm = parm)
+  data_main <- simData(parm = parm, N = parm$Nfmi)
   
   
   for(i in 1 : nrow(conds))
@@ -308,15 +398,17 @@ getTrueFMI <- function(conds, parm)
 #Reusing the big impSet to save computational cost
 #Adjusts the number of m to the newly specified m while maintaining the big impList of m = 500
 
-adjustImpList <- function(impList, parm)
+adjustImpList <- function(impListdf, parm)
 {
   
   #Copy the m = 500 imputation list
-  out <- impList
+  out <- impListdf
   
   
+  #Compute 
+  parm$mcomp <- parm$m/length(out)
   #Sampling pm*500 observations
-  r <- sample(1:length(out), length(out)*parm$pm)
+  r <- sample(1:length(out), length(out)-parm$m)
   
   
   #Creating a vector of 500 FALSE elements and replacing previously sampled elements with TRUE
