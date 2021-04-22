@@ -60,6 +60,8 @@ makeMissing <- function(data,
   #MAR missing data mechanism
   if(mechanism=="MAR")
   {
+    
+    
     #Specify where holes will be poked into the data sets
     out <- simLinearMissingness(pm       = pm,
                                 data     = data,
@@ -67,32 +69,44 @@ makeMissing <- function(data,
                                 preds    = preds,
                                 type     = "high",
                                 optimize = FALSE)
+    
+    
     #Poke Holes
     missingdf <- data
     missingdf[out$r , 1] <- NA
     missingdf
+    
   }
   
   #MCAR missing data mechanism
   else if(mechanism=="MCAR")
   {
+    
+    #Random sampling pm*N elements from the df
     r <- sample(1:nrow(data), nrow(data)*pm)
+    
+    
+    #Creating a vector of 500 FALSE elements and replacing previously sampled elements with TRUE
     tmp <- rep(FALSE, nrow(data))
     tmp[r] <- TRUE
     r <- tmp
     out <- list(r   = r)#,
-    #eta = eta2,
-    #auc = auc,
-    #snr = sd(eta) / sqrt(var(eta2) - var(eta)))
-    #return
+    
+    
+    #Poke holes
     missingdf <- data
     missingdf[out$r , 1] <- NA
     missingdf
+    
+    
   }
+  
   else
+    
   {
     stop("Undefined or unsupported missing data mechanism.")
   }
+  
 }
 
 
@@ -296,15 +310,30 @@ getTrueFMI <- function(conds, parm)
 
 adjustImpList <- function(impList, parm)
 {
+  
+  #Copy the m = 500 imputation list
   out <- impList
+  
+  
+  #Sampling pm*500 observations
   r <- sample(1:length(out), length(out)*parm$pm)
+  
+  
+  #Creating a vector of 500 FALSE elements and replacing previously sampled elements with TRUE
   tmp <- rep(FALSE, length(out))
   tmp[r] <- TRUE
   r <- tmp
+  
+  
+  #As the imputation list is a list, this also has to be a list
   list <- list(r = r)
+  
+  
+  #Remove the 'TRUE' values from the imputation list
   impList2 <- out
   impList2[list$r] <- NULL
   impList2
+  
 }
 
 
