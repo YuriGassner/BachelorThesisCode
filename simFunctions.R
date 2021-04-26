@@ -100,9 +100,11 @@ makeMissing <- function(data,
 ##-------------------------------------------------------------------------------------------------------------------##
 #New doRep function saving the impList 
 
-doRep2 <- function(conds, parm)
+doRep2 <- function(conds, parm, counter)
 {
   data_main <- try(simData(parm = parm, N = parm$n))
+  
+  c <- counter
   
   
   for (i in 1 : nrow(conds))
@@ -128,6 +130,7 @@ doRep2 <- function(conds, parm)
     #When TRUE: new imputation list needs to be generated
     #Is FALSE when either pm/mec is not null OR when either pm/mec are the same as parm$pm/mec
     #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
+    #Check does what it is supposed to do, only 10 imp sets are created per iteration
     
     if(check == "TRUE")
     {
@@ -178,10 +181,9 @@ doRep2 <- function(conds, parm)
     
   }
   
-  
   #Write list to disc
   saveRDS(store, 
-          file = paste0("results/doRep2_i2.rds"))
+          file = paste0("results/doRep2_",c,".rds")) #c is the current iteration
   
   
 }
