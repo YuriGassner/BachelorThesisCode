@@ -1,11 +1,7 @@
 #Parameters of the simulation:
 parm <- list()
 
-
-# parm$mec        <- c("MCAR", "MAR")               #Missingness mechanism
-# parm$pm         <- c(0.1, 0.25, 0.5, 0.75, 0.9)   #Percent Missing
-# parm$m          <- c(5, 50, 100, 250, 500)        #Number of imputations
-parm$iter       <- c(1)                           #Iterations, WILL CHANGE TO 1000 IF CODE IS FULLY READY
+parm$iter       <- c(5)                           #Iterations, WILL CHANGE TO 1000 IF CODE IS FULLY READY
 parm$n          <- c(100)                         #Sample size
 parm$Nfmi       <- c(500000)                      #Large N to approximate infinity
 parm$rsq        <- c(0.4)                         #RSquared
@@ -22,14 +18,4 @@ m               <- c(500, 250, 100, 50, 5)        #Number of imputations
 conds <- expand.grid(m = m, pm = pm, mec = mec)   #Condition Matrix, specified so that m changes first while other par remain constant
 
 store <- vector("list", length = nrow(conds))     #List of matrices for temporary storage of each iteration
-storage <- vector("list", length = nrow(conds))   #List of matrices for temporary storage of the trueFMI values
-a <- 1                                            #Counter for storing the files doRep
-# b <- 1                                          #Counter for storing the files doRepMultipleData
-
-
-# old matrix
-# mec2           <- c("MCAR", "MAR")               #Missingness mechanism
-# pm2             <- c(0.1, 0.25, 0.5, 0.75, 0.9)   #Percent Missing
-# m2               <- c(5, 50, 100, 250, 500)        #Number of imputations
-# 
-# conds2 <- expand.grid(mec = mec2, pm = pm2, m = m2)  
+storage <- vector("list", length = nrow(conds))   #List of matrices for temporary storage of the trueFMI values                                         #Counter for storing the files doRep
