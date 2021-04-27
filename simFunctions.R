@@ -100,7 +100,7 @@ makeMissing <- function(data,
 ##-------------------------------------------------------------------------------------------------------------------##
 #New doRep function saving the impList 
 
-doRep2 <- function(conds, parm, counter)
+doRep <- function(conds, parm, counter)
 {
   data_main <- try(simData(parm = parm, N = parm$n))
   
@@ -190,72 +190,6 @@ doRep2 <- function(conds, parm, counter)
 
 
 
-##-------------------------------------------------------------------------------------------------------------------##
-# Calculate each cell of the crossed-condition matrix/One repetition of the simulation
-doRep <- function(conds, parm)
-{
-  #Simulate data only once per iteration as data-generation parameters are not changing
-  data_main <- try(simData(parm = parm, N = parm$n))
-  
-  
-  for (i in 1 : nrow(conds))
-  {
-    
-    #Create a seperate data matrix to avoid possible problems
-    data <- data_main
-    
-    
-    #Save current values of the varying values
-    parm$m <- conds[i, "m"]
-    parm$mec <- conds[i, "mec"]
-    parm$pm <- conds[i, "pm"]
-    
-    
-    #Poke holes into the data
-    MissingData <- try(makeMissing(data = data,
-                                     mechanism = parm$mec,
-                                     pm = parm$pm,
-                                     preds = parm$Vecpred,
-                                     snr = NULL
-    ))
-    
-    
-    #Impute missing values
-    impData <- try(mice(data = MissingData,
-                        m = parm$m,
-                        method = "norm",
-                        print = FALSE
-    ))
-    
-    
-    #Save a list of imputed data sets
-    impListdf <- try(complete(data = impData,
-                              action = "all"
-    ))
-    
-    
-    #Compute FMIs 
-    fmi <- try(fmi(data = impListdf,
-                   method = "sat",
-                   fewImps = TRUE
-    ))
-    
-    
-    #Save FMIs to list
-    store[[i]] <- fmi
-    
-  }
-  
-  
-  #Write list to disc
-  saveRDS(store, 
-          file = paste0("results/doRep_i1.rds"))
-  
-  
-  #Increase counter by 1
-  a <- a + 1
-  
-}
 
 ##-------------------------------------------------------------------------------------------------------------------##
 
