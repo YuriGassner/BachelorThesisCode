@@ -619,3 +619,380 @@ getTrueFMI <- function(conds, parm)
   
 }
 
+
+
+
+##-------------------------------------------------------------------------------------------------------------------##
+#Another try at the doRep function, keeping the max imputations and deleting along the way
+
+data <- simData(parm, N = parm$n)
+
+b <- 1
+parm$m <- conds[b, "m"]
+parm$mec <- conds[b, "mec"]
+parm$pm <- conds[b, "pm"]
+
+missData <- makeMissing(data = data,
+                        mechanism = parm$mec,
+                        pm = parm$pm,
+                        preds = parm$Vecpred,
+                        NULL)
+
+impData <- mice(data = missData,
+                m = parm$m,
+                method = "norm",
+                print = FALSE)
+
+impList <- complete(data = impData,
+                    action = "all")
+
+
+adjList <- adjustImpList(impList = impList,
+                         parm = parm)
+
+
+
+out <- impList
+r <- sample(1:length(out), length(out)*parm$pm)
+tmp <- rep(FALSE, length(out))
+tmp[r] <- TRUE
+r <- tmp
+list <- list(r = r)
+impList2 <- impList
+impList2[list$r] <- NULL
+
+
+
+adjustImpList <- adjustImpList(data = data, parm = parm)
+adjustImpList
+
+##TEST
+
+test <- list()
+
+for (i in 1:500)
+{
+  test[[i]] <- rnorm(500)
+}
+
+# 
+# test <- list(rnorm(500), rnorm(500), rnorm(500))
+# testcomp <- test
+# 
+# test[1:2] <- NULL
+length(test)
+lengths(test)
+
+
+
+r <- sample(1:length(test), length(test)*0.25)
+tmp <- rep(FALSE, length(test))
+tmp[r] <- TRUE
+r <- tmp
+out <- list(r   = r)#,
+
+gg <- test
+gg[out$r] <- NULL
+
+
+adjustImpList <- function(data, parm)
+{
+  out <- data
+  r <- sample(1:length(out), length(out)*parm$pm)
+  tmp <- rep(FALSE, length(out))
+  tmp[r] <- TRUE
+  r <- tmp
+  list <- list(r = r)
+  impList2 <- data
+  impList2[out$r] <- NULL
+}
+
+
+
+
+
+
+
+test1212 <- simDataInf(parm = parm, N = parm$Nfmi)
+
+
+testcond1 <- expand.grid(m = m, mec = mec, pm = pm)
+testcond2
+testcond3
+testcond4
+
+
+
+
+
+
+
+
+data_main <- try(simData(parm = parm, N = parm$n))
+
+
+for (i in 1 : nrow(conds))
+{
+  
+  #Create a seperate data matrix to avoid possible problems
+  data <- data_main
+  
+  
+  #Save current values of pm and mec to check if new imputed data sets need to be created
+  pm <- parm$pm
+  mec <- parm$mec
+  m <- parm$m
+  
+  #Save current values of the varying values
+  parm$m <- conds[3, "m"]
+  parm$mec <- conds[i, "mec"]
+  parm$pm <- conds[i, "pm"]
+  
+  
+  check <- (is.null(pm) | is.null(mec)) || (pm != parm$pm | mec != parm$mec)
+  #Is TRUE when either pm/mec equals NULL OR when either pm/mec are not the same as parm$pm/mec
+  #When TRUE: new imputation list needs to be generated
+  #Is FALSE when either pm/mec is not null OR when either pm/mec are the same as parm$pm/mec
+  #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
+  
+  if(check == "TRUE")
+  {
+    MissingData <- try(makeMissing(data = data,
+                                   mechanism = parm$mec,
+                                   pm = parm$pm,
+                                   preds = parm$Vecpred,
+                                   snr = NULL
+                                   ))
+    
+    
+    #Impute missing values
+    impData <- try(mice(data = MissingData,
+                        m = parm$m,
+                        method = "norm",
+                        print = FALSE
+                        ))
+    
+    
+    #Save a list of imputed data sets
+    impListdf <- try(complete(data = impData,
+                              action = "all"
+                             ))
+    
+  }
+  
+  else if(check ==  "FALSE")
+  {
+    out <- impListdf
+    
+    
+    #Sampling pm*500 observations
+    r <- sample(1:length(out), length(out)-parm$m)
+    
+    
+    #Creating a vector of 500 FALSE elements and replacing previously sampled elements with TRUE
+    tmp <- rep(FALSE, length(out))
+    tmp[r] <- TRUE
+    r <- tmp
+    
+    
+    #As the imputation list is a list, this also has to be a list
+    list <- list(r = r)
+    
+    
+    #Remove the 'TRUE' values from the imputation list
+    impList2 <- out
+    impList2[list$r] <- NULL
+    impList2
+  }
+  
+  else print("something went wrong")     #Very necessary
+  
+  
+  #Calculate FMI
+  fmi <- try(fmi(data = impListdf,
+                 method = "sat",
+                 fewImps = TRUE
+                 ))
+  
+  
+  #Save FMIs to list
+  store[[i]] <- fmi
+  
+}
+
+
+#Write list to disc
+saveRDS(store, 
+        file = paste0("results/data_it_",a,".rds"))
+
+
+
+
+
+#################################################################################-------------------------------------------
+
+data_main <- try(simData(parm = parm, N = parm$n))
+
+
+for (i in 1 : nrow(conds))
+{
+  
+  #Create a seperate data matrix to avoid possible problems
+  data <- data_main
+  
+  
+  #Save current values of pm and mec to check if new imputed data sets need to be created
+  pm <- parm$pm
+  mec <- parm$mec
+  m <- parm$m
+  
+  #Save current values of the varying values
+  parm$m <- conds[i, "m"]
+  parm$mec <- conds[i, "mec"]
+  parm$pm <- conds[i, "pm"]
+  
+  
+  check <- (is.null(pm) | is.null(mec)) || (pm != parm$pm | mec != parm$mec)
+  #Is TRUE when either pm/mec equals NULL OR when either pm/mec are not the same as parm$pm/mec
+  #When TRUE: new imputation list needs to be generated
+  #Is FALSE when either pm/mec is not null OR when either pm/mec are the same as parm$pm/mec
+  #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
+  
+  if(check == "TRUE")
+  {
+    MissingData <- try(makeMissing(data = data,
+                                   mechanism = parm$mec,
+                                   pm = parm$pm,
+                                   preds = parm$Vecpred,
+                                   snr = NULL
+    ))
+    
+    
+    #Impute missing values
+    impData <- try(mice(data = MissingData,
+                        m = parm$m,
+                        method = "norm",
+                        print = FALSE
+    ))
+    
+    
+    #Save a list of imputed data sets
+    impListdf <- try(complete(data = impData,
+                              action = "all"
+    ))
+    
+    impList <- impListdf
+    
+  }
+  
+  else if(check ==  "FALSE")
+  {
+    impList <- adjustImpList(impListdf = impListdf, parm = parm)
+    
+  }
+  
+  else print("something went wrong")     #Very necessary
+  
+  
+  #Calculate FMI
+  fmi <- try(fmi(data = impList,
+                 method = "sat",
+                 fewImps = TRUE
+  ))
+  
+  
+  #Save FMIs to list
+  store[[i]] <- fmi
+  
+}
+start_time <- 17.55
+end_time <- Sys.time()
+
+
+saveRDS(store,
+        file = paste0("results/doRep2_i1.rds"))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+data_main <- try(simData(parm = parm, N = parm$n))
+
+
+for (i in 1 : nrow(conds))
+{
+  
+  #Create a seperate data matrix to avoid possible problems
+  data <- data_main
+  
+  
+  #Save current values of pm and mec to check if new imputed data sets need to be created
+  pm <- parm$pm
+  mec <- parm$mec
+  m <- parm$m
+  
+  #Save current values of the varying values
+  parm$m <- conds[i, "m"]
+  parm$mec <- conds[i, "mec"]
+  parm$pm <- conds[i, "pm"]
+  
+  
+  check <- (is.null(pm) | is.null(mec)) || (pm != parm$pm | mec != parm$mec)
+  #Is TRUE when either pm/mec equals NULL OR when either pm/mec are not the same as parm$pm/mec
+  #When TRUE: new imputation list needs to be generated
+  #Is FALSE when either pm/mec is not null OR when either pm/mec are the same as parm$pm/mec
+  #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
+  
+  if(check == "TRUE")
+  {
+    MissingData <- try(makeMissing(data = data,
+                                   mechanism = parm$mec,
+                                   pm = parm$pm,
+                                   preds = parm$Vecpred,
+                                   snr = NULL
+    ))
+    
+    
+    #Impute missing values
+    impData <- try(mice(data = MissingData,
+                        m = parm$m,
+                        method = "norm",
+                        print = FALSE
+    ))
+    
+    
+    #Save a list of imputed data sets
+    impListdf <- try(complete(data = impData,
+                              action = "all"
+    ))
+    
+    impList <- impListdf
+    
+  }
+  
+  else if(check ==  "FALSE")
+  {
+    impList <- adjustImpList(impListdf = impListdf,
+                             parm = parm)
+    
+  }
+  
+  else print("something went wrong")     #Very necessary
+  
+  
+  #Calculate FMI
+  fmi <- try(fmi(data = impList,
+                 method = "sat",
+                 fewImps = TRUE
+  ))
+  
+  
+  #Save FMIs to list
+  store[[i]] <- fmi
+  
+  #Save Current data set
+  storage[[i]] <- impList
+  
+}
+
+
+
+
