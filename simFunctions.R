@@ -100,7 +100,7 @@ makeMissing <- function(data,
 ##-------------------------------------------------------------------------------------------------------------------##
 #New doRep function saving the impList 
 
-doRep <- function(conds, parm, counter)
+doIter <- function(conds, parm, counter)
 {
   data_main <- try(simData(parm = parm, N = parm$n))
   
