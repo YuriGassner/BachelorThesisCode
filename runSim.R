@@ -25,9 +25,9 @@ time <- list()
 
 for (f in 1:parm$iter)
 {
-  doRep(conds = conds,
-        parm = parm,
-        counter = f)
+  doIter(conds = conds,
+         parm = parm,
+         counter = f)
   
   time[[f]] <- Sys.time()
 }
