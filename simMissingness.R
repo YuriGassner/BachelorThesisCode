@@ -288,7 +288,8 @@ simLinearMissingness <- function(pm,
                                  auc      = NULL,
                                  snr      = NULL,
                                  optimize = TRUE,
-                                 preds    = colnames(data),
+                                 preds    = colnames(data), ### KML: You need to use the newest version of this script. In this version, this argument doesn't do anything.
+
                                  type     = "high",
                                  beta     = rep(1.0, length(preds)),
                                  stdData  = TRUE,
