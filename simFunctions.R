@@ -19,7 +19,7 @@
 simData <- function (parm, N)
 {
   
-    n <- N                                   
+    n <- N ### KML: What is the purpose of the assignment?
     sigma <- matrix(parm$cov, parm$pred, parm$pred)
     diag(sigma) <- 1.0
     
@@ -51,7 +51,7 @@ makeMissing <- function(data,
     #Specify where holes will be poked into the data sets
     out <- simLinearMissingness(pm       = pm,
                                 data     = data,
-                                snr      = parm$snr,
+                                snr      = parm$snr, ### KML: 'parm' is not an argument to this function
                                 preds    = preds,
                                 type     = "high",
                                 optimize = FALSE)
@@ -105,8 +105,7 @@ doIter <- function(conds, parm, counter)
   data_main <- try(simData(parm = parm, N = parm$n))
   
   c <- counter
-  
-  
+     
   for (i in 1 : nrow(conds))
   {
     
@@ -132,12 +131,12 @@ doIter <- function(conds, parm, counter)
     #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
     #Check does what it is supposed to do, only 10 imp sets are created per iteration
     
-    if(check == "TRUE")
+    if(check == "TRUE") ### KML: Don't need the comparison, 'check' is already a logical value
     {
       MissingData <- try(makeMissing(data = data,
                                      mechanism = parm$mec,
                                      pm = parm$pm,
-                                     preds = parm$Vecpred,
+                                     preds = parm$Vecpred, ### KML: What's going on here? This should be the column names of your MAR predictors.
                                      snr = NULL
       ))
       
@@ -155,7 +154,7 @@ doIter <- function(conds, parm, counter)
                                 action = "all"
       ))
       
-      impList <- impListdf
+      impList <- impListdf ### KML: What's the purpose of this assignment?
       
     }
     
@@ -165,7 +164,9 @@ doIter <- function(conds, parm, counter)
                               parm = parm)
      
     }
-    
+
+      length(impList)
+      
     else print("something went wrong")     #Very necessary
     
     
@@ -185,7 +186,7 @@ doIter <- function(conds, parm, counter)
   saveRDS(store, 
           file = paste0("results/doRep2_",c,".rds")) #c is the current iteration
   
-  
+### KML: Pass your output directory/filename as a variable
 }
 
 
@@ -200,7 +201,8 @@ getTrueFMI <- function(conds, parm)
   #Create one dataset with N = 500.000
   data_main <- simData(parm = parm, N = parm$Nfmi)
   
-  
+### KML: You don't need to loop over all conditions. You're not imputing
+### anything, so varying 'm' is redundant. 
   for(i in 1 : nrow(conds))
   {
     
@@ -211,7 +213,7 @@ getTrueFMI <- function(conds, parm)
     
     
     #Keep reusing the same previously created dataset
-    data <- data_main
+    data <- data_main ### KML: What's the purpose of this assignment?
     
     
     #Poke holes into the data set
@@ -226,7 +228,8 @@ getTrueFMI <- function(conds, parm)
     #Impute missing values via FIML and calculate FMI
     fmi <- try(fmi(data = MissingData,
                    method = "sat",
-                   ### POTENTIALLY EXCLUDE X2 AS THERE ARE NO MISSING VALUES? but also maybe not
+### POTENTIALLY EXCLUDE X2 AS THERE ARE NO MISSING VALUES? but also maybe not
+### KML: Don't exclude X2. The FMI will only be optimal when estimated from a fully saturated model.
     ))
     
     
@@ -252,15 +255,24 @@ adjustImpList <- function(impListdf, parm)
 {
   
   #Copy the m = 500 imputation list
-  out <- impListdf
+  out <- impListdf ### KML: Why copy?
   
   
   #Compute 
   parm$mcomp <- parm$m/length(out)
-  #Sampling pm*500 observations
-  r <- sample(1:length(out), length(out)-parm$m)
+  #Sampling pm*500 observations ### KML: ???
+    r <- sample(1:length(out), length(out)-parm$m)
+
+### KML: Don't you want to be sampling m imputations, not length(out) - m? This
+### code will return 45 imputed datasets in the m = 5 condition.
+### Oh, I see what you've done below. So, this function will work, but it's much
+### more complicated than necessary (as noted below).
   
-  
+
+### KML: The 'r' vector you create above will contain m randomly sampled indices
+### (after you fix the issue noted above). So, you can directly subset your list
+### of imputated datsets with 'r'. You don't need to create any logical vectors.
+    
   #Creating a vector of 500 FALSE elements and replacing previously sampled elements with TRUE
   tmp <- rep(FALSE, length(out))
   tmp[r] <- TRUE

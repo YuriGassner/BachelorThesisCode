@@ -5,10 +5,11 @@ rm(list=ls(all=TRUE))
 
 ## Libraries, Sources & Seed
 
-library("SimDesign")
+library("SimDesign") ### KML: Are you actually using this?
 library("mice")
 library("lavaan")
 library("semTools")
+library("mvtnorm") ### KML: Missing dependency
 
 source("init.R")
 source("simFunctions.R")
