@@ -19,12 +19,11 @@
 simData <- function (parm, N)
 {
   
-    n <- N ### KML: What is the purpose of the assignment?
     sigma <- matrix(parm$cov, parm$pred, parm$pred)
     diag(sigma) <- 1.0
     
     #Generate data
-    X <- rmvnorm(n = n, mean = rep(0, parm$pred), sigma = sigma)
+    X <- rmvnorm(n = N, mean = rep(0, parm$pred), sigma = sigma)
     
     data <- data.frame(X)
     
