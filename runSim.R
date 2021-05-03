@@ -5,17 +5,17 @@ rm(list=ls(all=TRUE))
 
 ## Libraries, Sources & Seed
 
-library("SimDesign") ### KML: Are you actually using this?
 library("mice")
-library("lavaan")
+# library("lavaan") ## Don't need that anymore as I am using the semTools package
 library("semTools")
 library("mvtnorm") ### KML: Missing dependency
+library("parallel")
 
 source("init.R")
 source("simFunctions.R")
 source("simMissingness.R")
 
-set.seed(541491)
+set.seed(541491)  #Potentially still change this 
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
@@ -24,14 +24,28 @@ set.seed(541491)
 start_time <- Sys.time()
 time <- list()
 
-for (f in 1:parm$iter)
-{
-  doIter(conds = conds,
+#Parallelise the doIter function over multiple cores, potentially include the time stamps
+
+mclapply(X = 1:parm$iter,
+         FUN = doIter,
+         conds = conds,
          parm = parm,
-         counter = f)
+         mc.cores = 3)
   
   time[[f]] <- Sys.time()
-}
+
+
+
+# Can run Rscript without GUI with function Rscript (probably)
+# parallelise with mclapply function (parallel package)
+# if I run 1-100 iter and then 200-300 the seed stays the same -> results are the same
+
+# total sample size = Nconds * iterations so iter = 500 instead of 1000 should still hold sufficient results, don't have to argue for it in the paper just mention it
+
+
+#######
+#Name the columns and rows instead of referring to it by numerical indices
+
 
 
 
