@@ -1,9 +1,7 @@
 ### Title:    Simulate MAR Missingness via Logistic Regression
 ### Author:   Kyle M. Lang
 ### Created:  2019-11-06
-### Modified: 2021-03-10
-
-library(pROC)
+### Modified: 2021-03-21
 
 ###--------------------------------------------------------------------------###
 
@@ -208,6 +206,12 @@ simLogisticMissingness <- function(pm,
 {
     if(is.null(snr) & is.null(auc))
         stop("You must define a value of either 'snr' or 'auc'")
+
+    if(!is.data.frame(data))
+        stop("'data' must be a data.frame")
+    
+    ## Extract the MAR predictors:
+    data <- data[preds]
     
     ## Standardize the missing data predictors:
     if(stdData & optimize != "noise") data <- scale(data)
@@ -288,8 +292,7 @@ simLinearMissingness <- function(pm,
                                  auc      = NULL,
                                  snr      = NULL,
                                  optimize = TRUE,
-                                 preds    = colnames(data), ### KML: You need to use the newest version of this script. In this version, this argument doesn't do anything.
-
+                                 preds    = colnames(data),
                                  type     = "high",
                                  beta     = rep(1.0, length(preds)),
                                  stdData  = TRUE,
@@ -300,6 +303,12 @@ simLinearMissingness <- function(pm,
 
     if(optimize & !type %in% c("high", "low"))
         stop("'type' must be either 'high' or 'low'")
+    
+    if(!is.data.frame(data))
+        stop("'data' must be a data.frame")
+    
+    ## Extract the MAR predictors:
+    data <- data[preds]
     
     ## Standardize the missing data predictors:
     if(stdData) data <- scale(data)
