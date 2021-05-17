@@ -45,9 +45,7 @@ mclapply(X = 1:parm$iter,
 time[[2]] <- Sys.time()
 
 saveRDS(time,
-        file = paste0("results/Time.rds"))
-
-
+        file = paste0(directory,a,"Time.rds"))
 # total sample size = Nconds * iterations so iter = 500 instead of 1000 should still hold sufficient results, don't have to argue for it in the paper just mention it
 
 
