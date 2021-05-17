@@ -1,53 +1,59 @@
 ## Clean up the workspace
 
 rm(list=ls(all=TRUE))
-
+setwd("/home/itsme/BachelorThesisCode")
 
 ## Libraries, Sources & Seed
 
+install.packages("mice","semTools","mvtnorm","parallel","pROC","rlecuyer")
+
 library("mice")
-# library("lavaan") ## Don't need that anymore as I am using the semTools package
 library("semTools")
-library("mvtnorm") ### KML: Missing dependency
+library("mvtnorm") 
 library("parallel")
+library("pROC") 
+library("rlecuyer")
 
 source("init.R")
 source("simFunctions.R")
 source("simMissingness.R")
 
-set.seed(541491)  #Potentially still change this 
 
+#Small Things for the setup
+cores <- detectCores()
+
+
+doIter(rp = 1,
+       conds = conds,
+       parm = parm)
 
 ##-------------------------------------------------------------------------------------------------------------------##
 # Start Simulation
-
-start_time <- Sys.time()
 time <- list()
 
+time[[1]] <- Sys.time()
+
 #Parallelise the doIter function over multiple cores, potentially include the time stamps
+
 
 mclapply(X = 1:parm$iter,
          FUN = doIter,
          conds = conds,
          parm = parm,
-         mc.cores = 3)
-  
-  time[[f]] <- Sys.time()
+         mc.cores = cores)
+#it uses one core per iteration!! so do these things in multiples of 4
+#Need about 30hours on average
+#Do 168-168-164 iterations -> 500
+#Current time is about 14min
+#168iterations would need about 10hours
 
+time[[2]] <- Sys.time()
 
+saveRDS(time,
+        file = paste0("results/Time.rds"))
 
-# Can run Rscript without GUI with function Rscript (probably)
-# parallelise with mclapply function (parallel package)
-# if I run 1-100 iter and then 200-300 the seed stays the same -> results are the same
 
 # total sample size = Nconds * iterations so iter = 500 instead of 1000 should still hold sufficient results, don't have to argue for it in the paper just mention it
-
-
-#######
-#Name the columns and rows instead of referring to it by numerical indices
-
-
-
 
 
 # getTrueFMI(conds, parm)
