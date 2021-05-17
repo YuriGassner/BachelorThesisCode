@@ -1,2 +1,0 @@
-# BachelorThesis
-BachelorThesis2021
