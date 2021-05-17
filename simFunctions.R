@@ -188,7 +188,7 @@ doIter <- function(rp, conds, parm)
   
   #Write list to disc
   saveRDS(store, 
-          file = paste0("results/Rep",c,".rds")) #c is the current iteration
+          file = paste0(directory,"Rep",c,".rds")) #c is the current iteration
   
  # variable <- "directory"
  # paste0(variable,"doRep2_",c,".rds")
@@ -242,7 +242,7 @@ getTrueFMI <- function(condsFMI, parm)
   
   
   saveRDS(storage,
-          file = paste0("results/data_trueFMI",i,".rds"))  ## save as variable
+          file = paste0(directory,"data_trueFMI.rds"))  ## save as variable
   
   
 }
