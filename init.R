@@ -14,6 +14,8 @@ parm$nStreams   <- c(500)                                      #How many iterati
 snr             <- c(1)                                        #Defining the signal-to-noise ratio
 
 
+directory <- "results/"                                        #Directory for all the output
+
 
 mec             <- c("MCAR", "MAR")                            #Missingness mechanism
 pm              <- c(0.9, 0.75, 0.5, 0.25, 0.1)                #Percent Missing
