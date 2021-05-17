@@ -19,13 +19,8 @@ source("simFunctions.R")
 source("simMissingness.R")
 
 
-#Small Things for the setup
+#Detects the amount of cores to later specify the maximum amount of cores to be used for parallelisation
 cores <- detectCores()
-
-
-doIter(rp = 1,
-       conds = conds,
-       parm = parm)
 
 ##-------------------------------------------------------------------------------------------------------------------##
 # Start Simulation
