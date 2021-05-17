@@ -40,7 +40,7 @@ makeMissing <- function(data,
                         mechanism="MCAR", 
                         pm, 
                         preds, 
-                        snr=NULL)
+                        snr=snr)
 {
   #MAR missing data mechanism
   if(mechanism=="MAR")
@@ -50,7 +50,7 @@ makeMissing <- function(data,
     #Specify where holes will be poked into the data sets
     out <- simLinearMissingness(pm       = pm,
                                 data     = data,
-                                snr      = parm$snr, ### KML: 'parm' is not an argument to this function
+                                snr      = snr, 
                                 preds    = preds,
                                 type     = "high",
                                 optimize = FALSE)
@@ -75,7 +75,7 @@ makeMissing <- function(data,
     tmp <- rep(FALSE, nrow(data))
     tmp[r] <- TRUE
     r <- tmp
-    out <- list(r   = r)#,
+    out <- list(r   = r)
     
     
     #Poke holes
@@ -99,17 +99,21 @@ makeMissing <- function(data,
 ##-------------------------------------------------------------------------------------------------------------------##
 #New doRep function saving the impList 
 
-doIter <- function(conds, parm, counter)
+doIter <- function(rp, conds, parm)
 {
-  data_main <- try(simData(parm = parm, N = parm$n))
+  #data_main <- try(simData(parm = parm, N = parm$n))
+  data <- try(simData(parm = parm,
+                      N = parm$n))
+  c <- rp
   
-  c <- counter
+  setSeed(parm = parm,
+          rp = c)
      
   for (i in 1 : nrow(conds))
   {
     
     #Create a seperate data matrix to avoid possible problems
-    data <- data_main
+    #data <- data_main
     
     
     #Save current values of pm and mec to check if new imputed data sets need to be created
@@ -130,13 +134,13 @@ doIter <- function(conds, parm, counter)
     #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
     #Check does what it is supposed to do, only 10 imp sets are created per iteration
     
-    if(check == "TRUE") ### KML: Don't need the comparison, 'check' is already a logical value
+    if(check) 
     {
       MissingData <- try(makeMissing(data = data,
                                      mechanism = parm$mec,
                                      pm = parm$pm,
-                                     preds = parm$Vecpred, ### KML: What's going on here? This should be the column names of your MAR predictors.
-                                     snr = NULL
+                                     preds = parm$Vecpred,
+                                     snr = snr
       ))
       
       
@@ -144,29 +148,29 @@ doIter <- function(conds, parm, counter)
       impData <- try(mice(data = MissingData,
                           m = parm$m,
                           method = "norm",
-                          print = FALSE
+                          print = FALSE,
+                          maxit = 1          #as only one variable has missing values
       ))
       
       
       #Save a list of imputed data sets
-      impListdf <- try(complete(data = impData,
-                                action = "all"
+      impList <- try(complete(data = impData,
+                              action = "all"
       ))
       
-      impList <- impListdf ### KML: What's the purpose of this assignment?
       
     }
     
-    else if(check ==  "FALSE")
+     else if(!check)
     {
-     impList <- adjustImpList(impListdf = impListdf,
+     impList <- adjustImpList(impList = impList,
                               parm = parm)
      
     }
 
       length(impList)
       
-    else print("something went wrong")     #Very necessary
+    
     
     
     #Calculate FMI
@@ -183,7 +187,10 @@ doIter <- function(conds, parm, counter)
   
   #Write list to disc
   saveRDS(store, 
-          file = paste0("results/doRep2_",c,".rds")) #c is the current iteration
+          file = paste0("results/Rep",c,".rds")) #c is the current iteration
+  
+ # variable <- "directory"
+ # paste0(variable,"doRep2_",c,".rds")
   
 ### KML: Pass your output directory/filename as a variable
 }
@@ -194,25 +201,19 @@ doIter <- function(conds, parm, counter)
 ##-------------------------------------------------------------------------------------------------------------------##
 
 
-getTrueFMI <- function(conds, parm)
+getTrueFMI <- function(condsFMI, parm)
 {
   
   #Create one dataset with N = 500.000
-  data_main <- simData(parm = parm, N = parm$Nfmi)
+  data <- simData(parm = parm, N = parm$Nfmi)
   
-### KML: You don't need to loop over all conditions. You're not imputing
-### anything, so varying 'm' is redundant. 
-  for(i in 1 : nrow(conds))
+  
+  for(i in 1 : nrow(condsFMI))
   {
     
     #Save current values of the varying values
-    parm$m <- conds[i, "m"]
-    parm$mec <- conds[i, "mec"]
-    parm$pm <- conds[i, "pm"]
-    
-    
-    #Keep reusing the same previously created dataset
-    data <- data_main ### KML: What's the purpose of this assignment?
+    parm$mec <- condsFMI[i, "mec"]
+    parm$pm <- condsFMI[i, "pm"]
     
     
     #Poke holes into the data set
@@ -220,7 +221,7 @@ getTrueFMI <- function(conds, parm)
                                    mechanism = parm$mec,
                                    pm = parm$pm,
                                    preds = parm$Vecpred,
-                                   snr = NULL
+                                   snr = snr
     ))
     
     
@@ -240,7 +241,7 @@ getTrueFMI <- function(conds, parm)
   
   
   saveRDS(storage,
-          file = paste0("results/data_trueFMI",i,".rds"))
+          file = paste0("results/data_trueFMI",i,".rds"))  ## save as variable
   
   
 }
@@ -250,17 +251,19 @@ getTrueFMI <- function(conds, parm)
 #Reusing the big impSet to save computational cost
 #Adjusts the number of m to the newly specified m while maintaining the big impList of m = 500
 
-adjustImpList <- function(impListdf, parm)
+adjustImpList <- function(impList, parm)
 {
   
-  #Copy the m = 500 imputation list
-  out <- impListdf ### KML: Why copy?
+  # #Copy the m = 500 imputation list
+  # out <- impListdf ### KML: Why copy?
+  # 
+  # 
+  # #Compute 
+  # # parm$mcomp <- parm$m/length(out)
+  # #Sampling m imputed data sets from the current 
+  # r <- sample(1:length(out), parm$m)
   
-  
-  #Compute 
-  parm$mcomp <- parm$m/length(out)
-  #Sampling pm*500 observations ### KML: ???
-    r <- sample(1:length(out), length(out)-parm$m)
+  impList[sample(1:length(impList), parm$m)]
 
 ### KML: Don't you want to be sampling m imputations, not length(out) - m? This
 ### code will return 45 imputed datasets in the m = 5 condition.
@@ -273,22 +276,29 @@ adjustImpList <- function(impListdf, parm)
 ### of imputated datsets with 'r'. You don't need to create any logical vectors.
     
   #Creating a vector of 500 FALSE elements and replacing previously sampled elements with TRUE
-  tmp <- rep(FALSE, length(out))
-  tmp[r] <- TRUE
-  r <- tmp
-  
-  
-  #As the imputation list is a list, this also has to be a list
-  list <- list(r = r)
-  
-  
-  #Remove the 'TRUE' values from the imputation list
-  impList2 <- out
-  impList2[list$r] <- NULL
-  impList2
+  # tmp <- rep(FALSE, length(out))
+  # tmp[r] <- TRUE
+  # r <- tmp
+  # 
+  # #As the imputation list is a list, this also has to be a list
+  # list <- list(r = r)
+  # 
+  # 
+  # #Remove the 'TRUE' values from the imputation list
+  # impList2 <- out
+  # impList2[list$r] <- NULL
+  # impList2
   
 }
 
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
+
+setSeed <- function(parm = parm, rp = rp)
+{
+  .lec.SetPackageSeed(rep(parm$seed, 6))
+  if(!rp %in% .lec.GetStreams())
+    .lec.CreateStream(c(1:parm$nStreams))
+  .lec.CurrentStream(rp)
+}
