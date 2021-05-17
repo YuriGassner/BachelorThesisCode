@@ -24,4 +24,4 @@ conds <- expand.grid(m = m, pm = pm, mec = mec)                #Condition Matrix
 condsFMI <- expand.grid(pm = pm, mec = mec)                    #Condition Matrix for the true FMI approximation
 
 store <- vector("list", length = nrow(conds))                  #List of matrices for temporary storage of each iteration
-storage <- vector("list", length = nrow(conds))                #List of matrices for temporary storage of the trueFMI values                                         #Counter for storing the files doRep
+storage <- vector("list", length = nrow(conds))                #List of matrices for temporary storage of the trueFMI values              
