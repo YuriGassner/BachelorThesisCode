@@ -2,7 +2,7 @@
 # Analysis
 # Read in RDS files
 rm(list=ls(all=TRUE))
-setwd("/home/itsme/BachelorThesisCode/resultsUwe/")
+setwd("/home/itsme/BachelorThesisCode/results")
 source("../init.R")
 source("../simFunctions.R")
 source("../simMissingness.R")
@@ -22,14 +22,14 @@ trueCovFmi  <- list(1:10)
 trueMeanFmibig <- list(1:10)
 trueVarFmibig  <- list(1:10)
 trueCovFmibig  <- list(1:10)
-#Random Vector
-new <- c(1:500)
+# #Random Vector
+Benoni <- c(1:length(results))
 
 
 #MeanFMI
-for(i in 1:80){
+for(i in 1:length(avgMeanFmi)){
   
-  for(u in 1:500){
+  for(u in 1:length(results)){
     
     new[[u]] <- results[[u]][[i]][["Means"]][["fmi"]][[1]]
   }
@@ -41,9 +41,9 @@ for(i in 1:80){
 
 
 #VarFmi
-for(i in 1:80){
+for(i in 1:length(avgVarFmi)){
   
-  for(u in 1:500){
+  for(u in 1:length(results)){
     
     new[[u]] <- results[[u]][[i]][["Covariances"]][["fmi"]]["X1", "X1"]
   }
@@ -55,9 +55,9 @@ for(i in 1:80){
 
 
 #CovFmi
-for(i in 1:80){
+for(i in 1:length(avgCovFmi)){
   
-  for(u in 1:500){
+  for(u in 1:length(results)){
     
     new[[u]] <- results[[u]][[i]][["Covariances"]][["fmi"]]["X2", "X1"]
   }
@@ -75,8 +75,10 @@ RuyLopez <- do.call(rbind, Map(data.frame,
 
 FinalResults <- cbind(RuyLopez, conds)
 
-# saveRDS(FinalResults,
-#         file = paste0("../Results_without_TrueFmi.rds"))
+saveRDS(FinalResults,
+       file = paste0("../Results_without_TrueFmiThiloYuri.rds"))
+
+########################################################################################################
 
 
 test <- getTrueFMI(condsFMI = condsFMI,
@@ -85,18 +87,18 @@ trueFmiResultsbig <- readRDS("../truefmi_5mil.rds")
 trueFmiResults <- readRDS("../data_trueFMI.rds")
 
 
-for(i in 1:10){
+for(i in 1:length(trueCovFmi)){
   trueMeanFmibig[[i]] <- trueFmiResultsbig[[i]][["Means"]][["fmi"]][[1]]
   trueCovFmibig[[i]]  <- trueFmiResultsbig[[i]][["Covariances"]][["fmi"]]["X1", "X2"]
   trueVarFmibig[[i]]  <- trueFmiResultsbig[[i]][["Covariances"]][["fmi"]]["X1", "X1"]
-  
+
 }
 
-for(i in 1:10){
+for(i in 1:length(trueCovFmi)){
   trueMeanFmi[[i]] <- trueFmiResults[[i]][["Means"]][["fmi"]][[1]]
   trueCovFmi[[i]]  <- trueFmiResults[[i]][["Covariances"]][["fmi"]]["X1", "X2"]
   trueVarFmi[[i]]  <- trueFmiResults[[i]][["Covariances"]][["fmi"]]["X1", "X1"]
-     
+
 }
 
 
