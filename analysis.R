@@ -7,7 +7,7 @@ source("../init.R")
 source("../simFunctions.R")
 source("../simMissingness.R")
 
-temp <- list.files(pattern = "*.rds")
+temp <- list.files(pattern = "Rep")
 results <- lapply(temp, readRDS)
 
 avgMeanFmi  <- list(1:80)
@@ -22,9 +22,30 @@ trueCovFmi  <- list(1:10)
 trueMeanFmibig <- list(1:10)
 trueVarFmibig  <- list(1:10)
 trueCovFmibig  <- list(1:10)
-# #Random Vector
+#Random Vector
 Benoni <- c(1:length(results))
 
+#More Things for plots and graphs
+AvgMeanFmiList <- list(c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
+                       c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
+                       c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
+                       c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
+                       c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
+                       c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
+                       c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
+                       c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500))
+
+#Things for plots and graphs
+for(b in 1:length(AvgMeanFmiList)){
+  
+  for(a in 1:length(results)){
+    AvgMeanFmiList[[b]][[a]] <- results[[a]][[b]][["Means"]][["fmi"]][[1]]
+  }
+}
+
+
+saveRDS(AvgMeanFmiList,
+        file = paste0("../AvgMeanFmiList.rds"))
 
 #MeanFMI
 for(i in 1:length(avgMeanFmi)){
