@@ -1,9 +1,9 @@
 #Parameters of the simulation:
 parm <- list()
 
-parm$iter       <- c(4)                                        #Iterations, WILL CHANGE TO 1000 IF CODE IS FULLY READY
+parm$iter       <- c(240)                                        #Iterations, WILL CHANGE TO 1000 IF CODE IS FULLY READY
 parm$n          <- c(100)                                      #Sample size
-parm$Nfmi       <- c(500000)                                   #Large N to approximate infinity
+parm$Nfmi       <- c(5000000)                                   #Large N to approximate infinity
 parm$rsq        <- c(0.4)                                      #RSquared
 parm$cov        <- c(0.3)                                      #Covariance (with infinite N, is equal to correlation)
 parm$pred       <- c(2)                                        #Number of Predictors: X1, X2
