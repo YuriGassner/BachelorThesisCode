@@ -6,19 +6,20 @@ trueFmi <- readRDS("TrueFmiResultsbig.rds")
 listAvgMeanFmi <- readRDS("AvgMeanFmiList.rds")
 source("../init.R")
 library("plot3D")
-library("ggplot2")
-library("dplyr")
-library("hrbrthemes")
-library("reshape2")
+#library("ggplot2")
+#library("dplyr")
+#library("hrbrthemes")
+#library("reshape2")
 ###------------------------------------------------------------------------------###
 # Some Testing
-testvec <- 
+res <- data.frame(results$avgMeanFmi, results$pm, results$m)
+
 dd <- matrix(ncol = 5, nrow = 8)
 x <- c(5, 10, 25, 50, 100, 200, 250, 500)
 y <- c(0.1, 0.25, 0.5, 0.75, 0.9)
-z <- dd
 rownames(dd) <- c("m = 5", "m = 10", "m = 25", "m = 50", "m = 100", "m = 200", "m = 250", "m = 500")
 colnames(dd) <- c("pm = 0.1", "pm = 0.25", "pm = 0.5", "pm = 0.75", "pm = 0.9")
+
 
 vec5   <- c(res[[1]][[40]], res[[1]][[32]], res[[1]][[24]], res[[1]][[16]], res[[1]][[8]])
 vec10  <- c(res[[1]][[39]], res[[1]][[31]], res[[1]][[23]], res[[1]][[15]], res[[1]][[7]])
@@ -38,7 +39,7 @@ dd[6, ] <- vec200
 dd[7, ] <- vec250
 dd[8, ] <- vec500
 
-
+z <- dd
 # hist3D(x = x, y = y, z = z, zlim = c(0,50), theta = 40, phi = 40, axes = TRUE, nticks = 8, label = FALSE,
 #        ticktype = "detailed", space = 0.5, lighting = TRUE, light = "diffuse", shade = 0.5, xlab = "deineMutter")
 
