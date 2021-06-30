@@ -1,14 +1,21 @@
-###-----------------------------------------------------------------###
+### Title:    Analysis of the main Simulation
+### Author:   Yuri T.C.A. Gaßner
+### Created:  2021-06-30
+
+
+##-------------------------------------------------------------------------------------------------------------------##
+rm(list=ls(all=TRUE))
 # Analysis
 # Read in RDS files
-rm(list=ls(all=TRUE))
-setwd("/home/itsme/BachelorThesisCode/results")
+setwd("/home/itsme/BachelorThesisCode/Final_Results/")
+
 source("../init.R")
 source("../simFunctions.R")
 source("../simMissingness.R")
 
 temp <- list.files(pattern = "Rep")
 results <- lapply(temp, readRDS)
+
 
 avgMeanFmi  <- list(1:80)
 avgVarFmi   <- list(1:80)
@@ -23,7 +30,7 @@ trueMeanFmibig <- list(1:10)
 trueVarFmibig  <- list(1:10)
 trueCovFmibig  <- list(1:10)
 #Random Vector
-Benoni <- c(1:length(results))
+Benoni <- c(1:320)
 
 #More Things for plots and graphs
 AvgMeanFmiList <- list(c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
@@ -48,43 +55,45 @@ saveRDS(AvgMeanFmiList,
         file = paste0("../AvgMeanFmiList.rds"))
 
 #MeanFMI
-for(i in 1:length(avgMeanFmi)){
+for(i in 1:length(avgMeanFmi[[1]])){
   
   for(u in 1:length(results)){
     
-    new[[u]] <- results[[u]][[i]][["Means"]][["fmi"]][[1]]
+    Benoni[[u]] <- results[[u]][[i]][["Means"]][["fmi"]][[1]]
   }
   
-  avgMeanFmi[[i]] <- mean(new)
-  devMeanFmi[[i]] <- sd(new)
+  avgMeanFmi[[1]][[i]] <- mean(Benoni)
+  devMeanFmi[[1]][[i]] <- SE(Benoni)
   
 }
 
 
+
+
 #VarFmi
-for(i in 1:length(avgVarFmi)){
+for(i in 1:length(avgVarFmi[[1]])){
   
   for(u in 1:length(results)){
     
-    new[[u]] <- results[[u]][[i]][["Covariances"]][["fmi"]]["X1", "X1"]
+    Benoni[[u]] <- results[[u]][[i]][["Covariances"]][["fmi"]]["X1", "X1"]
   }
   
-  avgVarFmi[[i]] <- mean(new)
-  devVarFmi[[i]] <- sd(new)
+  avgVarFmi[[1]][[i]] <- mean(Benoni)
+  devVarFmi[[1]][[i]] <- SE(Benoni)
   
 }
 
 
 #CovFmi
-for(i in 1:length(avgCovFmi)){
+for(i in 1:length(avgCovFmi[[1]])){
   
   for(u in 1:length(results)){
     
-    new[[u]] <- results[[u]][[i]][["Covariances"]][["fmi"]]["X2", "X1"]
+    Benoni[[u]] <- results[[u]][[i]][["Covariances"]][["fmi"]]["X2", "X1"]
   }
   
-  avgCovFmi[[i]] <- mean(new)
-  devCovFmi[[i]] <- sd(new)
+  avgCovFmi[[1]][[i]] <- mean(Benoni)
+  devCovFmi[[1]][[i]] <- SE(Benoni)
   
 }
 
@@ -97,15 +106,13 @@ RuyLopez <- do.call(rbind, Map(data.frame,
 FinalResults <- cbind(RuyLopez, conds)
 
 saveRDS(FinalResults,
-       file = paste0("../Results_without_TrueFmiThiloYuri.rds"))
+       file = paste0("../Results_without_TrueFmiwithrealSE.rds"))
 
-########################################################################################################
-
+##-------------------------------------------------------------------------------------------------------------------##
 
 test <- getTrueFMI(condsFMI = condsFMI,
                    parm = parm)
 trueFmiResultsbig <- readRDS("../truefmi_5mil.rds")
-trueFmiResults <- readRDS("../data_trueFMI.rds")
 
 
 for(i in 1:length(trueCovFmi)){
@@ -115,26 +122,132 @@ for(i in 1:length(trueCovFmi)){
 
 }
 
-for(i in 1:length(trueCovFmi)){
-  trueMeanFmi[[i]] <- trueFmiResults[[i]][["Means"]][["fmi"]][[1]]
-  trueCovFmi[[i]]  <- trueFmiResults[[i]][["Covariances"]][["fmi"]]["X1", "X2"]
-  trueVarFmi[[i]]  <- trueFmiResults[[i]][["Covariances"]][["fmi"]]["X1", "X1"]
-
-}
-
-
-ViennaGame <- do.call(rbind, Map(data.frame, trueMeanFmi = trueMeanFmi,
-                                 trueVarFmi = trueVarFmi, trueCovFmi = trueCovFmi))
 ViennaGamebig <- do.call(rbind, Map(data.frame, trueMeanFmi = trueMeanFmibig,
                                  trueVarFmi = trueVarFmibig, trueCovFmi = trueCovFmibig))
 
 TrueFmiResultsBig <- cbind(ViennaGamebig, condsFMI)
-TrueFmiResults <- cbind(ViennaGame, condsFMI)
-view(TrueFmiResults)
 
 saveRDS(TrueFmiResultsBig,
         file = paste0("../TrueFmiResultsbig.rds"))
 
 
+##-------------------------------------------------------------------------------------------------------------------##
+### Have to capture the accuracy of the results (how close they are to the true fmi which can then be depicted in a graph)
+setwd("/home/itsme/BachelorThesisCode/Final_Results/")
+results <- readRDS("Results_without_TrueFmiwithrealSE.rds")
+trueFmi <- readRDS("TrueFmiResultsbig.rds")
+
+difference <- results
+
+difference <- difference[,-c(4:6)]
+for(a in 1:3){
+  
+  #Difference for pm 90 MCAR
+  for(i in 1:8){
+    difference[i,a] <- abs(trueFmi[1,a]-difference[i,a])
+  }
+  #Difference for pm 75 MCAR
+  for(i in 9:16){
+    difference[i,a] <- abs(trueFmi[2,a]-difference[i,a])
+  }
+  #Diff pm 50 MCAR
+  for(i in 17:24){
+    difference[i,a] <- abs(trueFmi[3,a]-difference[i,a])
+  }
+  #Diff pm 25 MCAR
+  for(i in 25:32){
+    difference[i,a] <- abs(trueFmi[4,a]-difference[i,a])
+  }
+  #Diff pm 10 MCAR
+  for(i in 33:40){
+    difference[i,a] <- abs(trueFmi[5,a]-difference[i,a])
+  }
+  
+  #Diff pm 90 MAR
+  for(i in 41:48){
+    difference[i,a] <- abs(trueFmi[6,a]-difference[i,a])
+  }
+  #Diff pm 75 MAR
+  for(i in 49:56){
+    difference[i,a] <- abs(trueFmi[7,a]-difference[i,a])
+  }
+  #Diff pm 50 MAR
+  for(i in 57:64){
+    difference[i,a] <- abs(trueFmi[8,a]-difference[i,a])
+  }
+  #Diff pm 25 MAR
+  for(i in 65:72){
+    difference[i,a] <- abs(trueFmi[9,a]-difference[i,a])
+  }
+  #Diff pm 10 MAR
+  for(i in 73:80){
+    difference[i,a] <- abs(trueFmi[10,a]-difference[i,a])
+  }
+}
+
+  
+  saveRDS(difference,
+          file = paste0("../DifferenceFMIavg_FMITrueSE.rds"))
+  
+  
+  ##-------------------------------------------------------------------------------------------------------------------##
+
+setwd("/home/itsme/BachelorThesisCode/Final_Results/")
+results <- readRDS("Results_without_TrueFmiwithrealSE.rds")
+trueFmi <- readRDS("TrueFmiResultsbig.rds")
+
+difference <- results
+  
+difference <- difference[,-c(4:6)]
+for(a in 1:3){
+    
+  #Difference for pm 90 MCAR
+  for(i in 1:8){
+    difference[i,a] <- (difference[i,a]-trueFmi[1,a])/trueFmi[1,a]
+    }
+  #Difference for pm 75 MCAR
+  for(i in 9:16){
+    difference[i,a] <- (difference[i,a]-trueFmi[2,a])/trueFmi[2,a]
+  }
+  #Diff pm 50 MCAR
+  for(i in 17:24){
+    difference[i,a] <- (difference[i,a]-trueFmi[3,a])/trueFmi[3,a]
+  }
+  #Diff pm 25 MCAR
+  for(i in 25:32){
+    difference[i,a] <- (difference[i,a]-trueFmi[4,a])/trueFmi[4,a]
+  }
+  #Diff pm 10 MCAR
+  for(i in 33:40){
+    difference[i,a] <- (difference[i,a]-trueFmi[5,a])/trueFmi[5,a]
+  }
+  
+  #Diff pm 90 MAR
+  for(i in 41:48){
+    difference[i,a] <- (difference[i,a]-trueFmi[6,a])/trueFmi[6,a]
+  }
+  #Diff pm 75 MAR
+  for(i in 49:56){
+    difference[i,a] <- (difference[i,a]-trueFmi[7,a])/trueFmi[7,a]
+  }
+  #Diff pm 50 MAR
+  for(i in 57:64){
+    difference[i,a] <- (difference[i,a]-trueFmi[8,a])/trueFmi[8,a]
+  }
+  #Diff pm 25 MAR
+  for(i in 65:72){
+    difference[i,a] <- (difference[i,a]-trueFmi[9,a])/trueFmi[9,a]
+  }
+  #Diff pm 10 MAR
+  for(i in 73:80){
+    difference[i,a] <- (difference[i,a]-trueFmi[10,a])/trueFmi[10,a]
+  }
+}
+
+diff <- cbind(format(round(difference[,c(1:3)], 2), nsmall = 2), difference[,c(4:5)])
 
 
+saveRDS(difference,
+        file = paste0("RelativeBiasFMI.rds"))
+
+##-------------------------------------------------------------------------------------------------------------------##
