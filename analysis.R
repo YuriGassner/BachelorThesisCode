@@ -42,17 +42,6 @@ AvgMeanFmiList <- list(c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1
                        c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),
                        c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500),c(1:500))
 
-#Things for plots and graphs
-for(b in 1:length(AvgMeanFmiList)){
-  
-  for(a in 1:length(results)){
-    AvgMeanFmiList[[b]][[a]] <- results[[a]][[b]][["Means"]][["fmi"]][[1]]
-  }
-}
-
-
-saveRDS(AvgMeanFmiList,
-        file = paste0("../AvgMeanFmiList.rds"))
 
 #MeanFMI
 for(i in 1:length(avgMeanFmi[[1]])){
@@ -132,65 +121,7 @@ saveRDS(TrueFmiResultsBig,
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
-### Have to capture the accuracy of the results (how close they are to the true fmi which can then be depicted in a graph)
-setwd("/home/itsme/BachelorThesisCode/Final_Results/")
-results <- readRDS("Results_without_TrueFmiwithrealSE.rds")
-trueFmi <- readRDS("TrueFmiResultsbig.rds")
-
-difference <- results
-
-difference <- difference[,-c(4:6)]
-for(a in 1:3){
-  
-  #Difference for pm 90 MCAR
-  for(i in 1:8){
-    difference[i,a] <- abs(trueFmi[1,a]-difference[i,a])
-  }
-  #Difference for pm 75 MCAR
-  for(i in 9:16){
-    difference[i,a] <- abs(trueFmi[2,a]-difference[i,a])
-  }
-  #Diff pm 50 MCAR
-  for(i in 17:24){
-    difference[i,a] <- abs(trueFmi[3,a]-difference[i,a])
-  }
-  #Diff pm 25 MCAR
-  for(i in 25:32){
-    difference[i,a] <- abs(trueFmi[4,a]-difference[i,a])
-  }
-  #Diff pm 10 MCAR
-  for(i in 33:40){
-    difference[i,a] <- abs(trueFmi[5,a]-difference[i,a])
-  }
-  
-  #Diff pm 90 MAR
-  for(i in 41:48){
-    difference[i,a] <- abs(trueFmi[6,a]-difference[i,a])
-  }
-  #Diff pm 75 MAR
-  for(i in 49:56){
-    difference[i,a] <- abs(trueFmi[7,a]-difference[i,a])
-  }
-  #Diff pm 50 MAR
-  for(i in 57:64){
-    difference[i,a] <- abs(trueFmi[8,a]-difference[i,a])
-  }
-  #Diff pm 25 MAR
-  for(i in 65:72){
-    difference[i,a] <- abs(trueFmi[9,a]-difference[i,a])
-  }
-  #Diff pm 10 MAR
-  for(i in 73:80){
-    difference[i,a] <- abs(trueFmi[10,a]-difference[i,a])
-  }
-}
-
-  
-  saveRDS(difference,
-          file = paste0("../DifferenceFMIavg_FMITrueSE.rds"))
-  
-  
-  ##-------------------------------------------------------------------------------------------------------------------##
+# Relative Bias calculation
 
 setwd("/home/itsme/BachelorThesisCode/Final_Results/")
 results <- readRDS("Results_without_TrueFmiwithrealSE.rds")
