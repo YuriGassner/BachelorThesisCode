@@ -1,7 +1,14 @@
+### Title:    Parameters, Lists, and Matrices for the main Simulation
+### Author:   Yuri T.C.A. Gaßner
+### Created:  2021-06-30
+
+
+##-------------------------------------------------------------------------------------------------------------------##
+
 #Parameters of the simulation:
 parm <- list()
 
-parm$iter       <- c(240)                                        #Iterations, WILL CHANGE TO 1000 IF CODE IS FULLY READY
+parm$iter       <- c(500)                                        #Iterations, WILL CHANGE TO 1000 IF CODE IS FULLY READY
 parm$n          <- c(100)                                      #Sample size
 parm$Nfmi       <- c(5000000)                                   #Large N to approximate infinity
 parm$rsq        <- c(0.4)                                      #RSquared
@@ -16,10 +23,11 @@ snr             <- c(1)                                        #Defining the sig
 
 directory <- "results/"                                        #Directory for all the output
 
+time            <- list()                                      #Timing Simulation
 
 mec             <- c("MCAR", "MAR")                            #Missingness mechanism
 pm              <- c(0.9, 0.75, 0.5, 0.25, 0.1)                #Percent Missing
-m               <- c(500, 250, 200, 100, 50, 25, 10, 5)        #Number of imputations
+m               <- c(500, 200, 150, 100, 50, 25, 10, 5)        #Number of imputations
 
 conds <- expand.grid(m = m, pm = pm, mec = mec)                #Condition Matrix, specified so that m changes first while other par remain constant
 
