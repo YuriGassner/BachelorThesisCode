@@ -1,21 +1,9 @@
-# Functions
-##-------------------------------------------------------------------------------------------------------------------##
-
-### KML: This is just a function for me to use for testing.
-                                        #toyData <- function(n) {
-                                        #    sigma       <- matrix(0.3, 2, 2)
-                                        #    diag(sigma) <- 1.0
-                                        #    
-                                        #    dat1           <- rmvnorm(n, c(0, 0), sigma)
-                                        #    colnames(dat1) <- paste0("X", 1 : 2)
-                                        #    
-                                        #    r             <- as.logical(rbinom(n, 1, 0.3))
-                                        #    dat1[r, "X1"] <- NA
-                                        #    as.data.frame(dat1)
-                                        #}
-#test
+### Title:    Functions for the Bachelor Thesis
+### Author:   Yuri T.C.A. Gaßner
+### Created:  2021-06-30
 
 ##-------------------------------------------------------------------------------------------------------------------##
+# Simulate Data Function
 
 simData <- function (parm, N)
 {
@@ -34,8 +22,7 @@ simData <- function (parm, N)
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
-
-##-------------------------------------------------------------------------------------------------------------------##
+# Poke Holes Function
 
 makeMissing <- function(data, 
                         mechanism="MCAR", 
@@ -98,11 +85,10 @@ makeMissing <- function(data,
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
-#New doRep function saving the impList 
+# doRep Function 
 
 doIter <- function(rp, conds, parm)
 {
-  #data_main <- try(simData(parm = parm, N = parm$n))
   data <- try(simData(parm = parm,
                       N = parm$n))
   c <- rp
@@ -112,11 +98,6 @@ doIter <- function(rp, conds, parm)
      
   for (i in 1 : nrow(conds))
   {
-    
-    #Create a seperate data matrix to avoid possible problems
-    #data <- data_main
-    
-    
     #Save current values of pm and mec to check if new imputed data sets need to be created
     pm <- parm$pm
     mec <- parm$mec
@@ -129,11 +110,6 @@ doIter <- function(rp, conds, parm)
     
     
     check <- (is.null(pm) | is.null(mec)) || (pm != parm$pm | mec != parm$mec)
-    #Is TRUE when either pm/mec equals NULL OR when either pm/mec are not the same as parm$pm/mec
-    #When TRUE: new imputation list needs to be generated
-    #Is FALSE when either pm/mec is not null OR when either pm/mec are the same as parm$pm/mec
-    #When FALSE: no new imputation list is needed, list needs to be adjusted to new m!
-    #Check does what it is supposed to do, only 10 imp sets are created per iteration
     
     if(check) 
     {
@@ -190,17 +166,14 @@ doIter <- function(rp, conds, parm)
   saveRDS(store, 
           file = paste0(directory,"Rep",c,".rds")) #c is the current iteration
   
- # variable <- "directory"
- # paste0(variable,"doRep2_",c,".rds")
   
-### KML: Pass your output directory/filename as a variable
 }
 
 
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
-
+# Function to approximate true FMI values
 
 getTrueFMI <- function(condsFMI, parm)
 {
@@ -229,8 +202,6 @@ getTrueFMI <- function(condsFMI, parm)
     #Impute missing values via FIML and calculate FMI
     fmi <- try(fmi(data = MissingData,
                    method = "sat",
-### POTENTIALLY EXCLUDE X2 AS THERE ARE NO MISSING VALUES? but also maybe not
-### KML: Don't exclude X2. The FMI will only be optimal when estimated from a fully saturated model.
     ))
     
     
@@ -242,59 +213,31 @@ getTrueFMI <- function(condsFMI, parm)
   
   
   saveRDS(storage,
-          file = paste0(directory,"data_trueFMI.rds"))  ## save as variable
+          file = paste0(directory,"data_trueFMI.rds"))
   
   
 }
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
-#Reusing the big impSet to save computational cost
-#Adjusts the number of m to the newly specified m while maintaining the big impList of m = 500
+# Reusing the big impSet to save computational cost
+# Adjusts the number of m to the newly specified m while maintaining the big impList of m = 500
 
 adjustImpList <- function(impList, parm)
 {
-  
-  # #Copy the m = 500 imputation list
-  # out <- impListdf ### KML: Why copy?
-  # 
-  # 
-  # #Compute 
-  # # parm$mcomp <- parm$m/length(out)
-  # #Sampling m imputed data sets from the current 
-  # r <- sample(1:length(out), parm$m)
+
   
   impList[sample(1:length(impList), parm$m)]
-
-### KML: Don't you want to be sampling m imputations, not length(out) - m? This
-### code will return 45 imputed datasets in the m = 5 condition.
-### Oh, I see what you've done below. So, this function will work, but it's much
-### more complicated than necessary (as noted below).
   
-
-### KML: The 'r' vector you create above will contain m randomly sampled indices
-### (after you fix the issue noted above). So, you can directly subset your list
-### of imputated datsets with 'r'. You don't need to create any logical vectors.
-    
-  #Creating a vector of 500 FALSE elements and replacing previously sampled elements with TRUE
-  # tmp <- rep(FALSE, length(out))
-  # tmp[r] <- TRUE
-  # r <- tmp
-  # 
-  # #As the imputation list is a list, this also has to be a list
-  # list <- list(r = r)
-  # 
-  # 
-  # #Remove the 'TRUE' values from the imputation list
-  # impList2 <- out
-  # impList2[list$r] <- NULL
-  # impList2
-  
+}
+SE <- function(x){
+  sd(x)/sqrt(500)
 }
 
 
 
 ##-------------------------------------------------------------------------------------------------------------------##
+# Seedfunction to have independent samples when parallelising the process
 
 setSeed <- function(parm = parm, rp = rp)
 {
