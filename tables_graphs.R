@@ -42,8 +42,6 @@ dd[7, ] <- vec250
 dd[8, ] <- vec500
 
 z <- dd
-# hist3D(x = x, y = y, z = z, zlim = c(0,50), theta = 40, phi = 40, axes = TRUE, nticks = 8, label = FALSE,
-#        ticktype = "detailed", space = 0.5, lighting = TRUE, light = "diffuse", shade = 0.5, xlab = "deineMutter")
 
 hist3D(z = z,
        axes = TRUE,
